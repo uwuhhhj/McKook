@@ -12,10 +12,12 @@ message:
     link-success:
       - ''
       - '&f 已成功绑定KOOK账户 &a@user-nickname@'
+      - '&f 退出重进即可'
       - ''
     build-verify:
       - ''
       - '&f 你的验证码是 &e@verify-code@'
-      - '&f 请在 &aKOOK频道 &f私聊机器人输入'
+      - '&f 请在 &a白名单申请 &f频道输入'
       - '&f 验证码 &e5分钟 &f内有效'
+      - '&f KOOK服务器：https://kook.vip/xGeW3h'
       - ''

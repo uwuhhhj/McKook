@@ -1,10 +1,9 @@
-# User-specific stuff
+# User-specifiideac stuff
 .idea/
-
+.vscode/
 *.iml
 *.ipr
 *.iws
-
 # IntelliJ
 out/
 
@@ -110,4 +109,4 @@ buildNumber.properties
 .flattened-pom.xml
 
 # Common working directory
-run/
+build.properties

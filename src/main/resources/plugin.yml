@@ -1,7 +1,74 @@
 name: McKook
 version: '${project.version}'
+description: MC服务器与kook互通
 main: com.meteor.mckook.McKook
 api-version: 1.13
-author: meteor
+authors:
+  - meteor
+  - Loliiiico
 commands:
   mckook:
+    description: McKook 插件的主命令
+    usage: /<command> [subcommand] [args]
+    aliases: [kook] # 可选的别名
+    permission: mckook.command.use # 可选的权限节点
+    permission-message: 你没有权限执行此命令！ # 可选的无权限提示
+permissions:
+  # 主命令 /mckook 的基础使用权限 (已在 commands 块中定义，这里列出作为参考和完整性)
+  # mckook.command.use:
+  #   description: 允许使用 McKook 插件的基础指令。
+  #   default: true # 或者 op，取决于你希望谁默认能用
+
+  # HelpCmd (/mckook help)
+  mckook.command.use.help:
+    description: 允许使用 /mckook help 指令查看帮助信息。
+    default: true # 通常所有玩家都应该可以查看帮助
+
+  # LinkCmd (/mckook link)
+  mckook.command.use.link:
+    description: 允许玩家使用 /mckook link 指令来获取游戏与Kook账号的绑定码。
+    default: true # 绑定功能通常对所有玩家开放
+
+  # ReloadCmd (/mckook reload)
+  mckook.admin.reload:
+    description: 允许使用 /mckook reload 指令重载插件的配置、机器人或消息系统。
+    default: op # 重载是管理员操作
+  mckook.admin.whitelist:
+    description: 允许使用 /mckook whitelist on|off 指令来开启或关闭白名单验证功能。
+    default: op # 通常这类操作仅OP可用
+  # MessageBridgeCmd (/mckook messagebridge ...)
+  mckook.command.use.messagebridge:
+    description: 允许使用 /mckook messagebridge 系列指令的基础权限。
+    default: op
+  mckook.command.messagebridge.playerjoin:
+    description: 允许开启或关闭玩家加入服务器时发送Kook消息的功能。
+    default: op
+  mckook.command.messagebridge.playerquit:
+    description: 允许开启或关闭玩家离开服务器时发送Kook消息的功能。
+    default: op
+  mckook.command.messagebridge.serverchattokook: # 新增
+    description: 允许开启或关闭服务器聊天转发到Kook的功能。
+    default: op
+  mckook.command.messagebridge.kookchattoserver: # 新增
+    description: 允许开启或关闭Kook聊天转发到服务器的功能。
+    default: op
+
+  # BindCmd (/mckook bind ...)
+  mckook.command.bind: # BindCmd.hasPerm() 检查这个权限以允许访问 /mckook bind 子命令
+    description: 允许使用 /mckook bind 系列指令来管理玩家与Kook账号的绑定关系。
+    default: op # 管理绑定通常是管理员操作
+  mckook.command.bind.add:
+    description: 允许使用 /mckook bind add 指令手动为玩家添加绑定。
+    default: op
+  mckook.command.bind.getplayer:
+    description: 允许使用 /mckook bind getplayer 指令通过玩家名查询其绑定的Kook ID。
+    default: op
+  mckook.command.bind.getkook:
+    description: 允许使用 /mckook bind getkook 指令通过Kook ID查询其绑定的玩家名。
+    default: op
+  mckook.command.bind.removeplayer:
+    description: 允许使用 /mckook bind removeplayer 指令通过玩家名移除绑定。
+    default: op
+  mckook.command.bind.removekook:
+    description: 允许使用 /mckook bind removekook 指令通过Kook ID移除绑定。
+    default: op

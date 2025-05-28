@@ -4,22 +4,39 @@
 # 需要在哪个频道获取白名单
 channel: '白名单申请'
 
-setting:
-  # 是否开启该模块
-  enable: false
-  # 是否绕过原版白名单中的玩家
-  bypass-whitelisted: false
-  # 发起白名单申请的消息格式 (正则表达式)
-  # 默认配置需要在频道输入 申请白名单 玩家id
-  # 注意空格
-  message: '申请白名单 ([A-Za-z0-9]+)'
+# setting 块已移至主配置文件 config.yml
 
 message:
-  # 被踢出提示
-  bypass: |
-    &f请前往KOOK服务器 &3&l白名单申请 &f频道
-    &f发送 &c申请白名单 {player} &f获取进入资格
-    &d温馨提示: &f注意空格噢
+  # 之前 'bypass' 消息会被新的 'kick-for-unlinked' 替代
+  # bypass: |
+  #   &f请前往KOOK服务器 &3&l白名单申请 &f频道
+  #   &f发送 &c申请白名单 {player} &f获取进入资格
+  #   &d温馨提示: &f注意空格噢
+
+  # New: In-game message sent to the player with the verification code
+  prompt-link-on-join:
+    - "&e您好, {player}！您尚未绑定KOOK账户，无法进入服务器。"
+    - "&f请前往KOOK服务器的 &3&l{channel_name} &f频道。"
+    - "&f在那里发送我们提供给您的专属验证码进行绑定。"
+    - "&f您的验证码是: &b&l{verifyCode}"
+    - "&7(点击上方的验证码可以直接复制)"
+    - "&c您将在大约 {kick_delay_seconds} 秒后被请出服务器。绑定成功后即可加入！"
+    - "&7KOOK服务器：https://kook.vip/xGeW3h"
+
+  # 新增 Title 提示配置
+  prompt-title:
+    title: "&c请绑定KOOK账户！"
+    subtitle: "&f您的验证码是: &b&l{verifyCode}"
+    fadeIn: 20  # ticks (1秒)
+    stay: 100 # ticks (5秒)
+    fadeOut: 20 # ticks (1秒)
+
+  kick-for-unlinked: |
+    &c您因未绑定KOOK账户被请出服务器。
+    &f请检查您之前收到的游戏内消息，或使用以下验证码：
+    &f您的验证码: &b&l{verifyCode}
+    &f请前往KOOK服务器的 &3&l{channel_name} &f频道进行绑定。
+    &fKOOK服务器：https://kook.vip/xGeW3h
   kook:
     broadcast: |
       [
@@ -46,52 +63,52 @@ message:
         }
       ]
     link-success: |
-            [
-              {
-                "type": "card",
-                "theme": "secondary",
-                "size": "lg",
-                "modules": [
-                  {
-                    "type": "header",
-                    "text": {
-                      "type": "plain-text",
-                      "content": "已绑定游戏账号: {player}"
-                    }
-                  },
-                  {
-                    "type": "section",
-                    "text": {
-                      "type": "plain-text",
-                      "content": "现在你可以进入服务器了！"
-                    }
-                  },
-                  {
-                    "type": "action-group",
-                    "elements": [
-                      {
-                        "type": "button",
-                        "theme": "primary",
-                        "value": "ok",
-                        "text": {
-                          "type": "plain-text",
-                          "content": "确定"
-                        }
-                      },
-                      {
-                        "type": "button",
-                        "theme": "danger",
-                        "value": "cancel",
-                        "text": {
-                          "type": "plain-text",
-                          "content": "取消"
-                        }
-                      }
-                    ]
-                  }
-                ]
+      [
+        {
+          "type": "card",
+          "theme": "secondary",
+          "size": "lg",
+          "modules": [
+            {
+              "type": "header",
+              "text": {
+                "type": "plain-text",
+                "content": "已绑定游戏账号: {player}"
               }
-            ]
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "plain-text",
+                "content": "现在你可以进入服务器了！"
+              }
+            },
+            {
+              "type": "action-group",
+              "elements": [
+                {
+                  "type": "button",
+                  "theme": "primary",
+                  "value": "ok",
+                  "text": {
+                    "type": "plain-text",
+                    "content": "确定"
+                  }
+                },
+                {
+                  "type": "button",
+                  "theme": "danger",
+                  "value": "cancel",
+                  "text": {
+                    "type": "plain-text",
+                    "content": "取消"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
     already-link: |
       [
         {

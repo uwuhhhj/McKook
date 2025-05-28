@@ -66,9 +66,9 @@ allow-help-ad: true
 
 # Whether to register internal commands.
 internal-commands:
-  stop: true
-  help: true
-  plugins: true
+  stop: false
+  help: false
+  plugins: false
 
 # Allow command exception feedback to the sender
 allow-error-feedback: true

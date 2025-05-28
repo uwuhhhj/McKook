@@ -2,6 +2,7 @@ package com.meteor.mckook.kook.service;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.meteor.mckook.McKook;
 import com.meteor.mckook.kook.KookBot;
 import com.meteor.mckook.kook.KookService;
 import com.meteor.mckook.model.link.KookUser;
@@ -9,18 +10,23 @@ import com.meteor.mckook.model.link.LinkCache;
 import com.meteor.mckook.storage.DataManager;
 import com.meteor.mckook.storage.mapper.LinkRepository;
 import com.meteor.mckook.util.VerificationCodeGenerator;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import snw.jkook.entity.User;
 
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 /**
  * KOOK账户绑定
  */
 public class LinkService implements KookService {
-
+    private McKook plugin;
     private KookBot kookBot;
 
-    private LinkRepository linkRepository;
+    public LinkRepository linkRepository;
 
     /**
      * 验证码缓存
@@ -56,18 +62,39 @@ public class LinkService implements KookService {
 
     public KookUser link(String player,User user){
         KookUser kookUser = new KookUser();
-        kookUser.setId(user.getId());
-        kookUser.setIdentifyNum(String.valueOf(user.getIdentifyNumber()));
-        kookUser.setUserName(user.getName());
-        kookUser.setNickName(user.getNickName(kookBot.getGuild()));
-        kookUser.setJoinedAt(System.currentTimeMillis());
+        kookUser.setPlayer_uuid(setPlayerUuid(player));
+        kookUser.setKook_id(user.getId());
         kookUser.setPlayer(player);
-        kookUser.setMobileVerified(true);
-        kookUser.setBot(user.isBot());
-        kookUser.setVip(user.isVip());
+        kookUser.setUserName(user.getName());
         kookUser.setAvatar(user.getAvatarUrl(false));
+        kookUser.setMobileVerified(true);
+        kookUser.setJoinedAt(System.currentTimeMillis());
+        kookUser.setNickName(player);
         linkRepository.link(player,kookUser);
         return kookUser;
+    }
+
+    private String setPlayerUuid(String player) {
+        if (Bukkit.getPlayerExact(player) == null) {
+            //说明玩家不在线
+            try {
+                // Bukkit.getOfflinePlayer 可能会执行阻塞的网络调用。
+                OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(player);
+                UUID uuid = offlinePlayer.getUniqueId();
+
+                if (uuid == null) {
+                    // 这种情况对于有效的 playerName 来说比较罕见，但最好处理。
+                    this.plugin.getLogger().warning("[LinkService] 无法获取玩家 " + player + " 的UUID。该玩家可能从未在此服务器或以该名称登录。");
+                    return null;
+                }
+                return uuid.toString();
+            } catch (Exception e) {
+                // 捕获泛型 Exception 可能隐藏具体问题，但在此处作为基本错误处理。
+                this.plugin.getLogger().log(Level.WARNING, "[LinkService] 获取玩家 " + player + " 的UUID时发生异常: " + e.getMessage(), e);
+                return null;
+            }
+        }
+        return Objects.requireNonNull(Bukkit.getPlayerExact(player)).getUniqueId().toString();
     }
 
     public LinkCache getLinkCache(String verifyCode){

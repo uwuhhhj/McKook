@@ -12,31 +12,28 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @ResultSetPopulatable
 public class KookUser implements FieldListable {
+    //绑定玩家游戏的uuid
     @FieldOrder(1)
-    private String id;
-    // 绑定玩家名
+    private String player_uuid;
+    // 绑定玩家KOOK身份 KOOK_id
     @FieldOrder(2)
-    private String player;
+    private String kook_id;
+    // 绑定玩家名
     @FieldOrder(3)
-    private String userName;
+    private String player;
+    // KOOK名
     @FieldOrder(4)
-    private String nickName;
+    private String userName;
+    // KOOKt头像网站
     @FieldOrder(5)
-    private String identifyNum;
-    @FieldOrder(6)
     private String avatar;
-    // 是否为vip
-    @FieldOrder(7)
-    private boolean vip;
-    // 是否为机器人
-    @FieldOrder(8)
-    private boolean bot;
     // 手机号码是否已验证
-    @FieldOrder(9)
+    @FieldOrder(6)
     private boolean mobileVerified;
     // 加入服务器(kook)时间
-    @FieldOrder(10)
+    @FieldOrder(7)
     private long joinedAt;
-
-
+    @FieldOrder(8)
+    private String NickName;
+    // KookUser.java
 }

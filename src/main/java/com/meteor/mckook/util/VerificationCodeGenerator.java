@@ -7,8 +7,8 @@ import java.util.Random;
  * 验证码生成工具
  */
 public class VerificationCodeGenerator {
-    private static final String CHAR_SET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    private static final int CODE_LENGTH = 5;
+    private static final String CHAR_SET = "0123456789";
+    private static final int CODE_LENGTH = 6;
     private static final Random random = new SecureRandom();
 
     public static String generateVerificationCode() {

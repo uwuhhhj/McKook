@@ -5,12 +5,41 @@ setting:
   # 黑名单世界 (在该世界的玩家消息不会被转发)
   black-worlds:
     - 'exam'
+  # 服务器的id
+  guild: '自己填'
   # 使用频道号
-  guild: '9922005485817007'
   channel:
-    闲聊频道: '3416199282635005'
-    公告频道: '7318381633665461'
-    白名单申请: '2989565677550120'
+    闲聊频道: '5697409055338359'
+    公告频道: '1252730549716403'
+    白名单申请: '6683142884528255'
+  # 服务器内拥有的一些角色
+  roles:
+    管理员: '9216269'
+    玩家: '9216270'
 
+  # 白名单模式设置 (从 WhitelistMessage.yml 移动过来)
+  whitelist:
+    # 是否开启该模块
+    enable: false # true 为启用, false 为禁用
+    # 白名单范围
+    check-range:
+      join: false # join - 加入服务器 - 玩家加入服务器时检测是否在绑定的数据库中，如果不在则踢出
+      action: false # action - 被拦截者缓存默认不启用 - 玩家可以加入服务器，但如果未绑定数据库，则会阻止玩家移动操作
+    kick-delay-seconds: 10 # 玩家收到验证码提示后，多少秒后被踢出服务器 (单位: 秒)
+  # 消息桥接设置
+  message-bridge:
+    player-join:
+      # 玩家加入服务器时是否发送消息到KOOK
+      enabled: false # true 为启用, false 为禁用
+    player-quit:
+      # 玩家离开服务器时是否发送消息到KOOK
+      enabled: false # true 为启用, false 为禁用
+    server-chat-to-kook: # 新增
+      # 服务器内玩家聊天是否转发到KOOK
+      enabled: false # true 为启用, false 为禁用
+    kook-chat-to-server: # 新增
+      # KOOK频道内消息是否转发到服务器
+      enabled: false # true 为启用, false 为禁用
 kook:
-  bot-token: '1/MjY5MjU=/vXEHeZIZhN1ssthMgWS/mg=='
+  bot-token: '填机器人token'
+  command-prefix: "/mckook"

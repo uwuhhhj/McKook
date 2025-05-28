@@ -7,13 +7,11 @@ import java.util.List;
 public class TestLink {
     public static void main(String[] args) {
         KookUser kookUser = new KookUser();
-        kookUser.setId("1");
-        kookUser.setBot(false);
+        kookUser.setKook_id("1");
         kookUser.setAvatar("avater");
         kookUser.setUserName("username");
         kookUser.setPlayer("playername");
         kookUser.setMobileVerified(false);
-        kookUser.setIdentifyNum("idn");
         kookUser.setJoinedAt(System.currentTimeMillis());
 
         List<Object> fieldList = kookUser.getFieldList();

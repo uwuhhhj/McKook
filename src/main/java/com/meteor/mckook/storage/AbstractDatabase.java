@@ -42,28 +42,26 @@ public abstract class AbstractDatabase implements Database {
 
     /**
      * 执行更新sql语句
-     * @param sql
-     * @param params
-     * @param parameterValue
+     *
+     * @param sql            SQL语句，可能包含 {key} 格式的占位符
+     * @param params         用于替换SQL语句中 {key} 占位符的参数映射
+     * @param parameterValue PreparedStatement 的参数值列表
+     * @return
      */
-    public void executeUpdate(String sql, Map<String, String> params, List<Object> parameterValue){
-        if(params!=null)
-            sql = putParams(sql,params);
-
-        PreparedStatement preparedStatement = null;
-        try {
-            preparedStatement = preparedStatementSetObject(getConnection().prepareStatement(sql),parameterValue);
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }finally {
-            try {
-                preparedStatement.close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+    public int executeUpdate(String sql, Map<String, String> params, List<Object> parameterValue) {
+        // 如果 params 不为 null且不为空, 则替换SQL中的占位符
+        if (params != null && !params.isEmpty()) {
+            sql = putParams(sql, params);
         }
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            preparedStatementSetObject(ps, parameterValue);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("执行数据库更新操作失败: " + e.getMessage(), e);
+        }
+        return 1;
     }
+
 
     /**
      * 查询结果集
@@ -85,4 +83,7 @@ public abstract class AbstractDatabase implements Database {
     }
 
 
+    public boolean isConnected() {
+        return false;
+    }
 }

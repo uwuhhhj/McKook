@@ -1,46 +1,62 @@
 ## **McKook**
-为Kook和MC建立桥梁，就像DiscordSRV一样
+为 Minecraft 服务器与 KOOK（开黑啦）平台搭建互通桥梁，提供全方位的服务器管理与社区互动功能。
 
 ![view](https://moe-counter.glitch.me/get/@mcKook.readme)
 
 ![image](https://github.com/meteorOSS/McKook/assets/61687266/f25ff878-5e7c-4b33-9cbc-9664634745f3)
 
-![image](https://github.com/meteorOSS/McKook/assets/61687266/26be8025-6d61-4e01-881d-876971c068e7)
+## 主要功能
 
-[快速开始](https://github.com/meteorOSS/McKook/wiki/%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B)
+### 1. 消息互通系统
+- **聊天同步**：实时同步 Minecraft 服务器与 KOOK 指定频道的聊天消息
+- **事件转播**：
+  - 玩家加入/退出服务器通知
+  - 支持自定义消息模板
+  - 支持卡片消息样式
 
-这个项目正在进行中，当前尚不完善; 你可以关注 [releases](https://github.com/meteorOSS/McKook/releases) 页获取最新的进展
+### 2. 账号绑定系统
+- **MC-KOOK 账号绑定**：支持玩家将 Minecraft 账号与 KOOK 账号关联
+- **数据存储**：使用数据库存储绑定关系，玩家uuid作为主键
+- **身份同步**：计划支持 KOOK 身份组与游戏内权限的关联
+- 便捷的白名单添加/移除命令
+- 插件会为每位未绑定的玩家生成一个唯一的验证码，并提示其前往指定的 KOOK 频道输入以完成绑定。
+- 验证码校验通过后，插件会自动完成账号绑定，并向 KOOK 频道与游戏内发送绑定成功提示。
+- 所有提示消息、限制行为与踢出延迟均可通过配置文件灵活调整。
 
-使用时遇到无法解决的问题，请先查看是否为最新版本; 如果还不能解决问题，可以加群 653440235 反馈
+### 3. 白名单管理
+- 启白名单功能后，玩家进入服务器将自动进行 KOOK 账号绑定状态检测。
+- 未绑定 KOOK 账号的玩家将收到绑定提示消息（支持聊天栏消息 + 屏幕标题提示），并在配置启用的情况下被限制移动或延迟踢出。
 
-## 简介
-1. Minecraft与Kook之间的聊天同步
-2. 根据MC中一些事件转播到Kook中 (如成就解锁,加入,退出游戏等)
-   ......
+### 4. 命令系统
+#### Minecraft 端命令
+- `/mckook bind` - 增删改查，MC 和 KOOK 账号的绑定
+- `/mckook link` - 手动生成一个账号绑定验证码方法
+- `/mckook whitelist` - 白名单管理
+- `/mckook messagebridge` - 消息互通设置
+- `/mckook reload` - 重载插件配置
+- `/mckook help` - 显示帮助信息
 
+#### KOOK 端命令
+- 支持在 KOOK 中执行服务器管理命令
+- 提供便捷的服务器状态查询功能
 
+### 5. 配置系统
+- **模块化配置**：独立的消息、角色、功能配置文件
+- **热重载**：支持在不重启服务器的情况下重载配置
+- **高度自定义**：
+  - 可自定义消息模板
+  - 可配置角色权限
 
 ## 快速开始
+1. [安装教程](https://github.com/meteorOSS/McKook/wiki/%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B)
+2. [功能指南](https://github.com/meteorOSS/McKook/wiki/%E7%8E%B0%E5%9C%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88)
 
-1. [安装插件](https://github.com/meteorOSS/McKook/wiki/%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B)
-2. [现在可以做什么](https://github.com/meteorOSS/McKook/wiki/%E7%8E%B0%E5%9C%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88)
+## 开发进度
+- [x] 卡片消息自定义
+- [x] KOOK 与游戏内账号绑定
+- [ ] 完善指令系统（KOOK和游戏内）
+- [ ] PAPI等功能支持
+- [ ] 更多功能开发中...
 
-## 待办清单
-
-* 卡片消息自定义 ✔
-* KOOK与游戏内账号绑定 ✔
-* 白名单绑定 ✔
-* 成就解锁消息通知 ☐
-
-有任何想法欢迎提交到 Issues 中
-
-
-## 捐赠
-
-如果你认可我的工作，可以请我喝一杯可乐
-
-这是我的爱发电 [https://afdian.net/a/zshzsh](https://afdian.net/a/zshzsh)
-
-### 捐赠名单
-
-> 来自 @549726031 的 50￥
+## 支持与反馈
+- 这是原来项目的一个分支，原来的项目已经废弃了
