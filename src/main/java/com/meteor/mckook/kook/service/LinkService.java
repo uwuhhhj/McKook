@@ -9,8 +9,11 @@ import com.meteor.mckook.model.link.LinkCache;
 import com.meteor.mckook.storage.DataManager;
 import com.meteor.mckook.storage.mapper.LinkRepository;
 import com.meteor.mckook.util.VerificationCodeGenerator;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import snw.jkook.entity.User;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -56,10 +59,11 @@ public class LinkService implements KookService {
 
     public KookUser link(String player,User user){
         KookUser kookUser = new KookUser();
-        kookUser.setId(user.getId());
+        kookUser.setKook_id(user.getId());
+        kookUser.setPlayer_uuid(setPlayerUuidIfOnline(player));
         kookUser.setIdentifyNum(String.valueOf(user.getIdentifyNumber()));
         kookUser.setUserName(user.getName());
-        kookUser.setNickName(user.getNickName(kookBot.getGuild()));
+        kookUser.setNickName(player);
         kookUser.setJoinedAt(System.currentTimeMillis());
         kookUser.setPlayer(player);
         kookUser.setMobileVerified(true);
@@ -68,6 +72,13 @@ public class LinkService implements KookService {
         kookUser.setAvatar(user.getAvatarUrl(false));
         linkRepository.link(player,kookUser);
         return kookUser;
+    }
+
+    private String setPlayerUuidIfOnline(String player) {
+        if (Bukkit.getPlayerExact(player) == null) {
+            return null;
+        }
+        return Objects.requireNonNull(Bukkit.getPlayerExact(player)).getUniqueId().toString();
     }
 
     public LinkCache getLinkCache(String verifyCode){

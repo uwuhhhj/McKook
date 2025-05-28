@@ -5,3 +5,8 @@ api-version: 1.13
 author: meteor
 commands:
   mckook:
+    description: McKook 插件的主命令
+    usage: /<command> [subcommand] [args]
+    aliases: [kook] # 可选的别名
+    permission: mckook.command.use # 可选的权限节点
+    permission-message: 你没有权限执行此命令！ # 可选的无权限提示

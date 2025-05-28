@@ -7,7 +7,7 @@ import java.util.List;
 public class TestLink {
     public static void main(String[] args) {
         KookUser kookUser = new KookUser();
-        kookUser.setId("1");
+        kookUser.setKook_id("1");
         kookUser.setBot(false);
         kookUser.setAvatar("avater");
         kookUser.setUserName("username");

@@ -17,7 +17,7 @@ public class HelpCmd extends SubCmd {
 
     @Override
     public String getPermission() {
-        return "mckook.use.help";
+        return "mckook.command.use.help";
     }
 
     @Override

@@ -85,4 +85,7 @@ public abstract class AbstractDatabase implements Database {
     }
 
 
+    public boolean isConnected() {
+        return false;
+    }
 }

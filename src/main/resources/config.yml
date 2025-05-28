@@ -5,12 +5,15 @@ setting:
   # 黑名单世界 (在该世界的玩家消息不会被转发)
   black-worlds:
     - 'exam'
+  # 启用KOOK用户使用验证码绑定玩家id
+  enable-code-binding: true
   # 使用频道号
-  guild: '9922005485817007'
+  guild: '53641007'
   channel:
-    闲聊频道: '3416199282635005'
-    公告频道: '7318381633665461'
-    白名单申请: '2989565677550120'
+    闲聊频道: '5697409055338359'
+    公告频道: '1252730549716403'
+    白名单申请: '6683142884528255'
+message_to_minecraft: '&f[&a闲聊频道&f] &f{user}: &7{message}'
 
 kook:
-  bot-token: '1/MjY5MjU=/vXEHeZIZhN1ssthMgWS/mg=='
+  bot-token: '填自己的机器人token'

@@ -1,7 +1,9 @@
-# 绑定KOOK账号
+# 绑定KOOK账号的频道
+channels:
+  - '白名单申请'
 message:
   success:
-    minecraft: message.link.link-success #message.yml中的消息文本
+    minecraft: message.link.link-success
     kook: |
       [
         {

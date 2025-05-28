@@ -12,6 +12,7 @@ import snw.jkook.entity.channel.Channel;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.event.Listener;
 import snw.jkook.message.component.BaseComponent;
+import snw.jkook.message.component.card.MultipleCardComponent;
 import snw.kookbc.impl.CoreImpl;
 import snw.kookbc.impl.KBCClient;
 
@@ -49,7 +50,7 @@ public class KookBot {
                     .loadConfiguration(reader),
                     new File(plugin.getDataFolder(),"plugins"),
                     plugin.getConfig().getString("kook.bot-token")
-                    );
+            );
             kbcClient.start();
             this.guild = plugin.getConfig().getString("setting.guild");
             channelMap = new HashMap<>();
@@ -79,8 +80,10 @@ public class KookBot {
      * 获取使用服务器
      */
     public Guild getGuild(){
+        this.plugin.getServer().getLogger().info("[DEBUG] 尝试获取 Guild，ID: " + this.guild);
         return httpAPI().getGuild(this.guild);
     }
+
 
     /**
      * 是否不可用
@@ -91,6 +94,7 @@ public class KookBot {
     }
 
     public void registerKookListener(Listener listener){
+        plugin.getLogger().info("[DEBUG] 正在注册 KOOK 事件监听器: " + listener.getClass().getSimpleName());
         kbcClient.getCore().getEventManager().registerHandlers(kbcClient.getInternalPlugin(),listener);
     }
 
@@ -133,5 +137,15 @@ public class KookBot {
             });
         });
     }
+    public void sendPlainText(List<String> channels, String message) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin,()->{
+            channels.forEach(channelId->{
+                Channel channel = channelMap.get(channelId);
+                if(channel instanceof TextChannel textChannel){
+                    textChannel.sendComponent(message);
+                }
+            });
+        });
 
+    }
 }

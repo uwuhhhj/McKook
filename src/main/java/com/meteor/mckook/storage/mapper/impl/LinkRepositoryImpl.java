@@ -41,7 +41,8 @@ public class LinkRepositoryImpl implements LinkRepository, BaseMapper {
 
         // 创建kook用户表
         this.database.executeUpdate("CREATE TABLE IF NOT EXISTS {table} (\n" +
-                "    id VARCHAR(255) PRIMARY KEY,\n" +
+                "    kook_id VARCHAR(255) PRIMARY KEY,\n" +
+                "    player_uuid CHAR(36),\n" +
                 "    player VARCHAR(25),\n" +
                 "    userName VARCHAR(255),\n" +
                 "    nickName VARCHAR(255),\n" +
@@ -62,7 +63,7 @@ public class LinkRepositoryImpl implements LinkRepository, BaseMapper {
         // 当有缓存时，必定已经绑定过了
         if(kookUserCache.getIfPresent(player)!=null) return true;
 
-        String sql = "select id from "+KOOK_USER_TABLE_NAME+" where player = ?";
+        String sql = "select kook_id from "+KOOK_USER_TABLE_NAME+" where player = ?";
 
         return this.database.executeQuery(sql,null,Arrays.asList(player),resultSet -> {
             try {
@@ -107,13 +108,13 @@ public class LinkRepositoryImpl implements LinkRepository, BaseMapper {
 
     @Override
     public void link(String player, KookUser kookUser) {
-        String sql = "INSERT INTO "+KOOK_USER_TABLE_NAME+" (id, player, userName, nickName, identifyNum, avatar, vip, bot, mobileVerified, joinedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO "+KOOK_USER_TABLE_NAME+" (kook_id, player_uuid , player, userName, nickName, identifyNum, avatar, vip, bot, mobileVerified, joinedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         this.database.executeUpdate(sql,null,kookUser.getFieldList());
     }
 
     @Override
     public boolean kookUserIsLinked(String kookId) {
-        String sql = "select player from "+KOOK_USER_TABLE_NAME+" where id = ?";
+        String sql = "select player from "+KOOK_USER_TABLE_NAME+" where kook_id = ?";
         return this.database.executeQuery(sql,null,Arrays.asList(kookId),resultSet -> {
             try {
                 if(resultSet.next()) return true;

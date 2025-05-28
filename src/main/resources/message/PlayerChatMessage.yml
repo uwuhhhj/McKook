@@ -1,23 +1,5 @@
-# 聊天转播频道
-channel: '闲聊频道'
-
-message:
-  kook: |
-    [
-      {
-        "type": "card",
-        "theme": "secondary",
-        "size": "lg",
-        "modules": [
-          {
-            "type": "section",
-            "text": {
-              "type": "kmarkdown",
-              "content": "(font){player} 说: (font)[success] {message} (font)(游戏内)(font)[pink]"
-            }
-          }
-        ]
-      }
-    ]
-
-  minecraft: '&f[&a闲聊频道&f] &f{user}: &7{message}'
+# KOOK聊天转播服务器频道
+channels:
+  - '闲聊频道'
+# 聊天的格式
+message_to_minecraft: '&f[&aKOOK&f] &f{user}: &7{message}'

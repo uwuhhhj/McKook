@@ -6,37 +6,45 @@ import com.meteor.mckook.reflect.orm.ResultSetPopulatable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @ResultSetPopulatable
 public class KookUser implements FieldListable {
+    // 绑定玩家KOOK身份 KOOK_id
     @FieldOrder(1)
-    private String id;
-    // 绑定玩家名
+    private String kook_id;
+    //绑定玩家游戏的uuid
     @FieldOrder(2)
-    private String player;
+    private String player_uuid;
+    // 绑定玩家名
     @FieldOrder(3)
-    private String userName;
+    private String player;
     @FieldOrder(4)
-    private String nickName;
+    private String userName;
     @FieldOrder(5)
-    private String identifyNum;
+    private String nickName;
     @FieldOrder(6)
+    private String identifyNum;
+    @FieldOrder(7)
     private String avatar;
     // 是否为vip
-    @FieldOrder(7)
+    @FieldOrder(8)
     private boolean vip;
     // 是否为机器人
-    @FieldOrder(8)
+    @FieldOrder(9)
     private boolean bot;
     // 手机号码是否已验证
-    @FieldOrder(9)
+    @FieldOrder(10)
     private boolean mobileVerified;
     // 加入服务器(kook)时间
-    @FieldOrder(10)
+    @FieldOrder(11)
     private long joinedAt;
+
+    // KookUser.java
 
 
 }
