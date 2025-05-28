@@ -12,7 +12,6 @@ import snw.jkook.entity.channel.Channel;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.event.Listener;
 import snw.jkook.message.component.BaseComponent;
-import snw.jkook.message.component.card.MultipleCardComponent;
 import snw.kookbc.impl.CoreImpl;
 import snw.kookbc.impl.KBCClient;
 
