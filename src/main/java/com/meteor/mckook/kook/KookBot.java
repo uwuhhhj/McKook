@@ -126,16 +126,22 @@ public class KookBot {
      * @param channels 指定频道
      * @param baseComponent 消息
      */
-    public void sendMessage(List<String> channels,BaseComponent baseComponent){
-        Bukkit.getScheduler().runTaskAsynchronously(plugin,()->{
-            channels.forEach(channelId->{
+    public void sendMessage(List<String> channels, BaseComponent baseComponent) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            channels.forEach(channelId -> {
                 Channel channel = channelMap.get(channelId);
-                if(channel instanceof TextChannel textChannel){
-                    textChannel.sendComponent(baseComponent);
+                if (channel instanceof TextChannel textChannel) {
+                    try {
+                        textChannel.sendComponent(baseComponent);
+                    } catch (Exception e) {
+                        plugin.getLogger().warning("[McKook] 向频道 " + channelId + " 发送消息失败: " + e.getMessage());
+                        e.printStackTrace();
+                    }
                 }
             });
         });
     }
+
     public void sendPlainText(List<String> channels, String message) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin,()->{
             channels.forEach(channelId->{

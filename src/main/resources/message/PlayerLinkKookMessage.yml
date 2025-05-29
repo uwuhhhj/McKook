@@ -1,6 +1,8 @@
 # 绑定KOOK账号的频道
 channels:
   - '白名单申请'
+# 启用KOOK用户使用验证码绑定玩家id
+enable-code-binding: false
 message:
   success:
     minecraft: message.link.link-success

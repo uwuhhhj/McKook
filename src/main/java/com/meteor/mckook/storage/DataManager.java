@@ -35,8 +35,7 @@ public class DataManager {
 
         this.baseMapperMap = new HashMap<>();
 
-        baseMapperMap.put(LinkRepository.class,new LinkRepositoryImpl(abstractDatabase));
-
+        baseMapperMap.put(LinkRepository.class, new LinkRepositoryImpl(this.plugin, abstractDatabase));
     }
 
     public void close(){
@@ -52,12 +51,20 @@ public class DataManager {
         }
     }
 
-    public static void init(McKook plugin){
-        instance = new DataManager(plugin);
+    public static void init(McKook plugin) {
+        if (instance == null) { // Basic check to prevent re-initialization if called multiple times
+            instance = new DataManager(plugin);
+        }
     }
-
+    public static DataManager getInstance() {
+        return instance;
+    }
 
     public <T> T getMapper(Class<T> mapper) {
         return mapper.cast(baseMapperMap.get(mapper));
+    }
+
+    public LinkRepository getLinkRepository() {
+        return getMapper(LinkRepository.class);
     }
 }

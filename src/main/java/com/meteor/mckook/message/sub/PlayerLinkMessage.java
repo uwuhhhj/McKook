@@ -28,6 +28,8 @@ public class PlayerLinkMessage extends AbstractKookMessage {
     private String successLinkMessageMinecraft;
     private final YamlConfiguration config;
     String verifyCode_Error_message = "你输入的不是验证码哦 " ;
+    String alreadybind_Message = "你已经绑定其他玩家id了" ;
+    String noneedbind_Message = "服务器未启用绑定功能" ;
 
     public PlayerLinkMessage(McKook plugin, YamlConfiguration yamlConfiguration) {
         super(plugin, yamlConfiguration);
@@ -98,12 +100,10 @@ public class PlayerLinkMessage extends AbstractKookMessage {
     @EventHandler
     public void onVerifyCode(ChannelMessageEvent channelMessageEvent) {
         //配置文件中是否启用了绑定功能？未启用就返回
-        if (!config.getBoolean("setting.enable-code-binding", true)) {
-            getPlugin().getLogger().info("enable-code-binding");
+        if (!config.getBoolean("enable-code-binding", false)) {
+            getPlugin().getKookBot().sendPlainText(getUseChannelList(), noneedbind_Message);
             return;
         }
-        //获取当前频道
-        Channel targetChannel = channelMessageEvent.getChannel();
 
         try {
             String configuredId = channel.getString("白名单申请");
@@ -141,6 +141,7 @@ public class PlayerLinkMessage extends AbstractKookMessage {
 
             if (linkService.kookUserIsLinked(sender.getId())) {
                 getPlugin().getLogger().info("[DEBUG] 该 Kook 用户已绑定其他账号: " + sender.getId());
+                getPlugin().getKookBot().sendPlainText(getUseChannelList(), alreadybind_Message);
                 return;
             }
             // 3. 执行绑定

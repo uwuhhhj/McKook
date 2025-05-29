@@ -6,16 +6,21 @@ import com.meteor.mckook.message.AbstractKookMessage;
 import com.meteor.mckook.message.sub.PlayerChatMessage;
 import com.meteor.mckook.message.sub.PlayerJoinMessage;
 import com.meteor.mckook.message.sub.PlayerLinkMessage;
+import com.meteor.mckook.message.sub.WhitelistMessage;
 import com.meteor.mckook.storage.DataManager;
+import com.meteor.mckook.storage.mapper.LinkRepository;
 import com.meteor.mckook.util.BaseConfig;
 import lombok.Getter;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap; // 新增导入
 import java.util.List;
+import java.util.Map; // 新增导入
 import java.util.Objects;
 import java.util.logging.Level;
 
@@ -23,28 +28,49 @@ public final class McKook extends JavaPlugin {
 
     @Getter
     private KookBot kookBot;
-    // 在声明时初始化，避免 NullPointerException
     private List<AbstractKookMessage> abstractKookMessages = new ArrayList<>();
-
+    @Getter
+    private LinkRepository linkRepository;
     private CommandManager commandManager;
     private Metrics metrics;
+
+    // 新增字段：用于存储已加载的消息配置文件
+    private Map<String, YamlConfiguration> messageConfigurations = new HashMap<>();
+    // 建议将消息文件名定义为常量
+    private static final String PLAYER_JOIN_MESSAGE_FILE = "PlayerJoinKookMessage";
+    private static final String PLAYER_CHAT_MESSAGE_FILE = "PlayerChatMessage";
+    private static final String PLAYER_LINK_MESSAGE_FILE = "PlayerLinkKookMessage";
+    private static final String PLAYER_WHITELIST_MESSAGE_FILE = "WhitelistMessage";
+    private static final List<String> MESSAGE_FILE_NAMES = Arrays.asList(
+            PLAYER_JOIN_MESSAGE_FILE,
+            PLAYER_CHAT_MESSAGE_FILE,
+            PLAYER_LINK_MESSAGE_FILE,
+            PLAYER_WHITELIST_MESSAGE_FILE
+    );
+
 
     @Override
     public void onEnable() {
         // 1. 同步进行不依赖 KookBot 的初始化
-        saveDefaultConfig();
-        reloadPluginConfig(); // 加载 config.yml 并初始化 BaseConfig
+        saveDefaultConfig(); // 确保 config.yml 存在
+        reloadPluginConfig(); // 加载 config.yml, BaseConfig, 以及所有 message/*.yml 文件到内存
+
         DataManager.init(this);
+        if (DataManager.getInstance() != null) {
+            this.linkRepository = DataManager.getInstance().getLinkRepository();
+        }
 
-        // 实例化 CommandManager，但其依赖 KookBot 的 init() 方法会稍后调用
+        if (this.linkRepository == null) {
+            getLogger().log(Level.SEVERE, "LinkRepository 未能成功初始化。绑定相关功能将不可用。");
+            // getServer().getPluginManager().disablePlugin(this);
+            // return;
+        }
         commandManager = new CommandManager(this);
-        // 尽早设置命令执行器和 Tab 补全器，这样 /mckook 命令本身会被注册
-        Objects.requireNonNull(getCommand("mckook"), "命令 'mckook' 未在 plugin.yml 中定义!")
-                .setExecutor(commandManager);
-        Objects.requireNonNull(getCommand("mckook"), "命令 'mckook' 未在 plugin.yml 中定义!")
-                .setTabCompleter(commandManager);
+        PluginCommand mckookCommand = getCommand("mckook");
+        Objects.requireNonNull(mckookCommand, "命令 'mckook' 未在 plugin.yml 中定义!");
+        mckookCommand.setExecutor(commandManager);
+        mckookCommand.setTabCompleter(commandManager);
 
-        // 尽早初始化 Metrics
         metrics = new Metrics(this, 20690);
 
         getLogger().info("McKook 插件正在启动, 尝试连接 Kook 服务器...");
@@ -52,67 +78,55 @@ public final class McKook extends JavaPlugin {
         // 2. 异步初始化 KookBot
         getServer().getScheduler().runTaskAsynchronously(this, () -> {
             try {
-                KookBot newBotInstance = new KookBot(this); // 这是一个阻塞调用，在异步线程中执行
-                // 当 KookBot 成功创建后，切换回主线程来赋值并初始化依赖组件
+                KookBot newBotInstance = new KookBot(this);
                 getServer().getScheduler().runTask(this, () -> {
                     this.kookBot = newBotInstance;
                     getLogger().info("KookBot 异步初始化成功。");
 
                     // 3. KookBot 已就绪，现在初始化依赖 KookBot 的组件
                     getLogger().info("KookBot 已就绪, 初始化消息处理器和命令...");
-                    setupMessageHandlers(); // 注册监听器，需要 kookBot
-                    commandManager.init();  // 初始化命令，其中 LinkCmd 需要 kookBot
+                    // setupMessageHandlers 会使用 reloadPluginConfig 中加载的 messageConfigurations
+                    setupMessageHandlers();
+                    commandManager.init();
 
                     getLogger().info("感谢你的使用！McKook 插件已成功加载并连接到 Kook。");
                     getLogger().info("插件问题或建议请加群反馈 653440235");
                 });
             } catch (Exception e) {
-                this.kookBot = null; // 如果初始化失败，确保 kookBot 为 null
+                this.kookBot = null;
                 getLogger().log(Level.SEVERE, "KookBot 异步初始化失败。与 Kook 相关的功能将不可用。", e);
                 getLogger().info("McKook 插件已加载, 但未能连接到 Kook。请检查配置和网络。");
-                // 此时，setupMessageHandlers() 和 commandManager.init() 不会被调用，
-                // 避免了它们尝试使用 null 的 kookBot。
-                // 依赖 Kook 的功能将无法使用，这是预期的。
             }
         });
     }
 
     public void reload() {
         getLogger().info("开始插件重载流程...");
-        reloadPluginConfig();    // 1. 重载主配置 (同步)
-        // DataManager 如果配置在 config.yml 中更改，也可能需要重载
-        // DataManager.init(this); // 或者 DataManager 特定的重载方法
+        reloadPluginConfig();    // 1. 重载所有配置 (config.yml 和 message/*.yml)
+        // DataManager.init(this); // 如果 DataManager 的配置也需要重载
 
-        // 2. 重载 Kook 机器人 (异步).
-        //    依赖 KookBot 的系统 (消息处理, 命令) 将在其成功回调中被重新加载.
-        reloadKookBot();
+        reloadKookBot(); // 2. 重载 Kook 机器人 (异步), 其回调会调用 reloadMessageSystem
         getLogger().info("插件重载流程已启动 (KookBot 和相关系统将异步完成)。");
     }
 
     public void reloadKookBot() {
         getLogger().info("正在重新加载 Kook 机器人...");
-
-        // 先关闭并清理旧的 KookBot 实例及其监听器
         if (this.kookBot != null) {
             getLogger().info("正在关闭旧的 KookBot 实例...");
             try {
-                // 注销与旧 KookBot 实例相关的消息监听器
-                // AbstractKookMessage.unRegister() 可能需要旧的 kookBot 实例来正确注销 Kook 平台的监听器
                 if (abstractKookMessages != null) {
                     abstractKookMessages.forEach(AbstractKookMessage::unRegister);
                 }
-                // 如果 KookBot 本身有需要注销的通用监听器
-                if (!this.kookBot.isInvalid()) { // 假设 isInvalid 是一个快速检查
-                    this.kookBot.unRegisterKookListener(); // 假设 KookBot 类有此方法
+                if (!this.kookBot.isInvalid()) {
+                    this.kookBot.unRegisterKookListener();
                 }
-                this.kookBot.close(); // 关闭 KookBot 连接和资源
+                this.kookBot.close();
             } catch (Exception e) {
                 getLogger().log(Level.WARNING, "关闭旧 KookBot 实例时出错: ", e);
             }
-            this.kookBot = null; // 立即将 kookBot 设为 null
+            this.kookBot = null;
             getLogger().info("旧 KookBot 实例已关闭。");
         }
-
 
         getLogger().info("正在异步创建新的 KookBot 实例...");
         getServer().getScheduler().runTaskAsynchronously(this, () -> {
@@ -122,80 +136,118 @@ public final class McKook extends JavaPlugin {
                     this.kookBot = newBotInstance;
                     getLogger().info("Kook 机器人已异步重新加载。");
 
-                    // KookBot 已重新加载, 现在重新加载依赖它的系统
                     getLogger().info("KookBot 已更新, 重新加载消息系统和相关命令组件...");
-                    reloadMessageSystem(); // 这会调用 setupMessageHandlers，使用新的 kookBot 注册监听器
+                    // reloadMessageSystem 会调用 setupMessageHandlers,
+                    // setupMessageHandlers 会使用已由 reloadPluginConfig 加载的 messageConfigurations
+                    reloadMessageSystem();
                     if (commandManager != null) {
-                        commandManager.init(); // 重新初始化命令, LinkCmd 将获取新的 kookBot
+                        commandManager.init();
                     }
                     getLogger().info("依赖 KookBot 的组件已使用新实例重新加载。");
                 });
             } catch (Exception e) {
-                this.kookBot = null; // 如果重载失败，确保 kookBot 为 null
+                this.kookBot = null;
                 getLogger().log(Level.SEVERE, "KookBot 异步重新加载失败。与 Kook 相关的功能可能无法使用。", e);
             }
         });
     }
 
+    // 新增方法：加载所有消息配置文件到内存
+    private void loadMessageConfigurations() {
+        getLogger().info("正在加载消息配置文件...");
+        messageConfigurations.clear(); // 清除旧的配置对象
+        for (String messageName : MESSAGE_FILE_NAMES) {
+            String filePath = "message/" + messageName + ".yml";
+            File file = new File(getDataFolder(), filePath);
+            if (!file.exists()) {
+                saveResource(filePath, false); // 保存默认文件
+                getLogger().info("已保存默认消息配置文件: " + filePath);
+            }
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+            messageConfigurations.put(messageName, config); // 按文件名存储配置对象
+            getLogger().info("已加载消息配置文件: " + filePath);
+        }
+        getLogger().info("所有消息配置文件加载完毕。");
+    }
+
     public void reloadPluginConfig() {
-        super.reloadConfig();
-        BaseConfig.init(this);
+        super.reloadConfig(); // 重载 config.yml
+        BaseConfig.init(this); // 初始化 BaseConfig
         getLogger().info("主配置文件 (config.yml) 已重新加载。");
+
+        loadMessageConfigurations(); // 加载/重载所有 message/*.yml 文件
+        getLogger().info("所有消息配置文件已重新加载。");
     }
 
     public void reloadMessageSystem() {
         getLogger().info("正在重新加载消息系统...");
-        // 1. 注销旧的消息处理器 (abstractKookMessages 在声明时已初始化, 不会为 null)
-        // unRegister 可能需要 kookBot 实例 (通常是旧的实例) 来注销 Kook 平台的监听器
-        abstractKookMessages.forEach(AbstractKookMessage::unRegister);
-        abstractKookMessages.clear(); // 清空列表
+        if (abstractKookMessages != null) { // 确保列表存在
+            abstractKookMessages.forEach(AbstractKookMessage::unRegister);
+            abstractKookMessages.clear();
+        } else {
+            abstractKookMessages = new ArrayList<>(); // 以防万一
+        }
 
-        // 2. 重新设置消息处理器 (会使用当前 this.kookBot，此时应为新的 KookBot 实例)
+        // setupMessageHandlers 现在会使用 this.messageConfigurations 中的配置
         setupMessageHandlers();
         getLogger().info("消息系统已重新加载。");
     }
 
     private void setupMessageHandlers() {
-        // abstractKookMessages 列表应由调用者 (如 reloadMessageSystem 或 onEnable) 确保是空的或已清理
-        // 此处不再需要 abstractKookMessages = new ArrayList<>();
-        // 但为了确保此方法的独立性和健壮性，可以保留 clear()
-        if (this.abstractKookMessages == null) { // 理论上不应发生，因为已在字段声明时初始化
+        // 确保 abstractKookMessages 列表是干净的
+        if (this.abstractKookMessages == null) {
             this.abstractKookMessages = new ArrayList<>();
         }
-        this.abstractKookMessages.clear(); // 确保从一个干净的列表开始添加
+        this.abstractKookMessages.clear();
 
-        // 确保消息配置文件存在
-        Arrays.asList("PlayerJoinMessage", "PlayerChatMessage", "PlayerLinkKookMessage").forEach(message -> {
-            String filePath = "message/" + message + ".yml"; // 建议使用常量定义文件名和路径
-            File file = new File(getDataFolder(), filePath);
-            if (!file.exists()) {
-                saveResource(filePath, false);
-            }
-        });
+        // KookBot 必须存在才能注册处理器
+        if (this.kookBot == null || this.kookBot.isInvalid()) {
+            getLogger().warning("KookBot 未就绪，无法设置消息处理器。");
+            return;
+        }
+
         try {
-            // 加载并注册 PlayerJoinMessage 处理器
-            PlayerJoinMessage playerJoinMessage = new PlayerJoinMessage(this, YamlConfiguration.loadConfiguration(
-                    new File(getDataFolder(), "message/PlayerJoinMessage.yml")
-            ));
-            abstractKookMessages.add(playerJoinMessage);
-            playerJoinMessage.register(); // register() 内部会使用 getKookBot()
+            // 从已加载的配置中获取并创建 PlayerJoinMessage 处理器
+            YamlConfiguration joinConfig = messageConfigurations.get(PLAYER_JOIN_MESSAGE_FILE);
+            if (joinConfig != null) {
+                PlayerJoinMessage playerJoinMessage = new PlayerJoinMessage(this, joinConfig);
+                abstractKookMessages.add(playerJoinMessage);
+                playerJoinMessage.register();
+            } else {
+                getLogger().warning("未能找到 " + PLAYER_JOIN_MESSAGE_FILE + " 的已加载配置，该消息功能可能无法正常工作。");
+            }
 
-            // 加载并注册 PlayerChatMessage 处理器
-            PlayerChatMessage playerChatMessage = new PlayerChatMessage(this, YamlConfiguration.loadConfiguration(
-                    new File(getDataFolder(), "message/PlayerChatMessage.yml")
-            ));
-            abstractKookMessages.add(playerChatMessage);
-            playerChatMessage.register();
+            // 从已加载的配置中获取并创建 PlayerChatMessage 处理器
+            YamlConfiguration chatConfig = messageConfigurations.get(PLAYER_CHAT_MESSAGE_FILE);
+            if (chatConfig != null) {
+                PlayerChatMessage playerChatMessage = new PlayerChatMessage(this, chatConfig);
+                abstractKookMessages.add(playerChatMessage);
+                playerChatMessage.register();
+            } else {
+                getLogger().warning("未能找到 " + PLAYER_CHAT_MESSAGE_FILE + " 的已加载配置，该消息功能可能无法正常工作。");
+            }
 
-            // 加载并注册 PlayerLinkMessage 处理器
-            PlayerLinkMessage playerLinkMessage = new PlayerLinkMessage(this, YamlConfiguration.loadConfiguration(
-                    new File(getDataFolder(), "message/PlayerLinkKookMessage.yml")
-            ));
-            abstractKookMessages.add(playerLinkMessage);
-            playerLinkMessage.register();
+            // 从已加载的配置中获取并创建 PlayerLinkMessage 处理器
+            YamlConfiguration linkConfig = messageConfigurations.get(PLAYER_LINK_MESSAGE_FILE);
+            if (linkConfig != null) {
+                PlayerLinkMessage playerLinkMessage = new PlayerLinkMessage(this, linkConfig);
+                abstractKookMessages.add(playerLinkMessage);
+                playerLinkMessage.register();
+            } else {
+                getLogger().warning("未能找到 " + PLAYER_LINK_MESSAGE_FILE + " 的已加载配置，该消息功能可能无法正常工作。");
+            }
+            // 从已加载的配置中获取并创建 WhitelistMessage 处理器
+            YamlConfiguration whitelistConfig = messageConfigurations.get(PLAYER_WHITELIST_MESSAGE_FILE);
+            if (whitelistConfig != null) {
+                WhitelistMessage playerLinkMessage = new WhitelistMessage(this, whitelistConfig);
+                abstractKookMessages.add(playerLinkMessage);
+                playerLinkMessage.register();
+            } else {
+                getLogger().warning("未能找到 " + PLAYER_WHITELIST_MESSAGE_FILE + " 的已加载配置，该消息功能可能无法正常工作。");
+            }
 
         } catch (Exception e) {
-            getLogger().log(Level.SEVERE, "加载消息处理器时发生错误:", e);
+            getLogger().log(Level.SEVERE, "创建和注册消息处理器时发生错误:", e);
         }
     }
 
@@ -203,7 +255,6 @@ public final class McKook extends JavaPlugin {
     public void onDisable() {
         getLogger().info(getName() + " 正在卸载...");
 
-        // 1. 关闭 KookBot
         if (this.kookBot != null) {
             try {
                 this.kookBot.close();
@@ -213,7 +264,6 @@ public final class McKook extends JavaPlugin {
             this.kookBot = null;
         }
 
-        // 2. 注销并清理消息处理器
         if (abstractKookMessages != null) {
             try {
                 abstractKookMessages.forEach(AbstractKookMessage::unRegister);
@@ -223,24 +273,19 @@ public final class McKook extends JavaPlugin {
             abstractKookMessages.clear();
             abstractKookMessages = null;
         }
+        messageConfigurations.clear(); // 清理已加载的消息配置
 
-        // 3. 关闭数据管理器
         if (DataManager.instance != null) {
             try {
                 DataManager.instance.close();
             } catch (Exception e) {
                 getLogger().log(Level.WARNING, "关闭 DataManager 时出错: ", e);
             }
-            // DataManager.instance = null; // 如果它是可重置的单例
         }
 
-        // 4. 清理其他资源
         commandManager = null;
         metrics = null;
-
-        // 5. 取消插件所有计划任务
         getServer().getScheduler().cancelTasks(this);
-
         getLogger().info(getName() + " 插件已卸载。");
     }
 }

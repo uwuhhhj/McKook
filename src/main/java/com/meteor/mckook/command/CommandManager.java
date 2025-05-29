@@ -4,6 +4,7 @@ import com.meteor.mckook.McKook;
 import com.meteor.mckook.command.cmds.HelpCmd;
 import com.meteor.mckook.command.cmds.LinkCmd;
 import com.meteor.mckook.command.cmds.ReloadCmd;
+import com.meteor.mckook.command.cmds.BindCmd;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -32,6 +33,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         register(new HelpCmd(plugin));
         register(new LinkCmd(plugin)); // LinkCmd 内部需要处理 plugin.getKookBot() 可能为 null 的情况
         register(new ReloadCmd(plugin));
+        register(new BindCmd(plugin));
         // 注册其他子命令...
     }
 

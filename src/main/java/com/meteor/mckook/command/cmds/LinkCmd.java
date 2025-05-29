@@ -6,10 +6,12 @@ import com.meteor.mckook.McKook;
 import com.meteor.mckook.command.SubCmd;
 import com.meteor.mckook.kook.service.LinkService;
 import com.meteor.mckook.util.BaseConfig;
+import org.bukkit.configuration.file.YamlConfiguration;
 // import okhttp3.OkHttpClient; // 未使用，可以移除
 import net.md_5.bungee.api.chat.*;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import net.md_5.bungee.api.chat.hover.content.Text; // 更推荐使用新的 HoverEvent.Action.SHOW_TEXT 构造方式
@@ -28,6 +30,7 @@ public class LinkCmd extends SubCmd {
 
     public LinkCmd(McKook plugin) {
         super(plugin);
+
         // 不在此处直接初始化 linkService，因为它依赖的 KookBot 可能是异步加载的
         // this.linkService = plugin.getKookBot().getService(LinkService.class); // <--- 移除或注释掉
 
@@ -88,7 +91,6 @@ public class LinkCmd extends SubCmd {
             player.sendMessage(ChatColor.RED + "绑定服务当前不可用，Kook机器人可能未连接。请稍后再试或联系管理员。");
             return;
         }
-
         if(currentLinkService.isLinked(player.getName())){
             // 假设 getMessage 返回的是处理过的字符串
             player.sendMessage(BaseConfig.instance.getMessageBox().getMessage(null,"message.link.already-link"));
