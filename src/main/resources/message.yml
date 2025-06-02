@@ -44,3 +44,49 @@ message:
       start: '@prefix@ &b正在尝试移除 Kook ID &f@kook-id@ &b的绑定...'
       usage: '@prefix@ &c用法: /mckook bind removekook <kook_id>'
     unknown-action: '@prefix@ &c未知操作: @action@'
+  kook_message:
+    help: |
+      **McKook Kook 命令帮助:**
+
+      - `/mckook info` - 获取您的 Kook 用户信息。
+      - `/mckook bind` - 管理账户绑定 (输入 `/mckook bind` 查看更多选项)。
+
+      请使用 `/mckook <子命令>` 来执行具体操作。
+    bind:
+      no_permission: "🚫 **权限不足**：您需要拥有 **管理员** 身份才能执行此操作。"
+      bot_unavailable: "错误：Kook机器人服务当前不可用。"
+      guild_error: "错误：无法获取主服务器信息，无法验证权限。请检查插件配置 (setting.guild)。"
+      roles_config_error: "错误：插件角色配置未加载，无法验证权限。请联系管理员检查后台日志。"
+      admin_role_undefined: "错误：管理员角色未在插件配置 (setting.roles) 中正确定义，无法执行此操作。"
+      service_unavailable: "错误：绑定服务 (LinkService) 未初始化，无法执行操作。请联系管理员。"
+      help: |
+        **McKook 绑定命令帮助 (仅限管理员):**
+
+        使用以下子命令来管理绑定:
+        - `/mckook bind add <玩家名> <Kook用户ID>` - 添加一个新的绑定。
+        - `/mckook bind getplayer <玩家名>` - 查询指定玩家名绑定的Kook ID。
+        - `/mckook bind getkook <Kook用户ID>` - 查询指定Kook ID绑定的玩家名。
+        - `/mckook bind removeplayer <玩家名>` - 按玩家名移除绑定。
+        - `/mckook bind removekook <Kook用户ID>` - 按Kook ID移除绑定。
+
+        **提示:** `<Kook用户ID>` 是用户在Kook平台的用户ID。您可以通过 `/mckook info` 命令查看用户自己的Kook用户ID。
+      add:
+        usage: "用法: /mckook bind add <玩家名> <Kook用户ID>"
+        processing: "正在尝试为玩家 `{player}` 和 Kook ID `{kookId}` 添加绑定..."
+      getplayer:
+        usage: "用法: /mckook bind getplayer <玩家名>"
+        processing: "正在查询玩家 `{player}` 绑定的 Kook ID..."
+        result: "玩家 `{player}` 绑定的 Kook ID 是: `{kookId}`"
+      getkook:
+        usage: "用法: /mckook bind getkook <Kook用户ID>"
+        processing: "正在查询 Kook ID `{kookId}` 绑定的玩家名..."
+        result: "Kook ID `{kookId}` 绑定的玩家名是: `{player}`"
+      removeplayer:
+        usage: "用法: /mckook bind removeplayer <玩家名>"
+        processing: "正在尝试移除玩家 `{player}` 的绑定..."
+      removekook:
+        usage: "用法: /mckook bind removekook <Kook用户ID>"
+        processing: "正在尝试移除 Kook ID `{kookId}` 的绑定..."
+      operation:
+        success: "✅ **{operation}成功**: {message}"
+        error: "⚠️ **{operation}失败**: {message}"

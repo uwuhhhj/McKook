@@ -3,7 +3,7 @@ package com.meteor.mckook.kook.command;
 import com.meteor.mckook.McKook;
 import com.meteor.mckook.kook.KookBot;
 import com.meteor.mckook.kook.command.cmds.BindCmd;
-import com.meteor.mckook.kook.command.cmds.InfoCmd; // 新增导入
+import com.meteor.mckook.kook.command.cmds.InfoCmd;
 import snw.jkook.command.JKookCommand;
 // User and Message are no longer directly used here if InfoCmd handles them
 // import snw.jkook.entity.User;
@@ -11,6 +11,7 @@ import snw.jkook.command.JKookCommand;
 // import snw.jkook.message.component.TextComponent; // Not used if InfoCmd handles its own messages
 import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.plugin.Plugin;
+import com.meteor.mckook.util.BaseConfig;
 
 import java.util.logging.Level;
 
@@ -46,19 +47,14 @@ public class KookCommandManager {
             BindCmd bindCmdHandler = new BindCmd(this.mcKookPlugin, this.kookBot);
             JKookCommand bindSubCommand = bindCmdHandler.buildCommand();
 
-
             // 3. 注册主 "/mckook" 命令并添加 "info" 和 "bind" 作为其子命令
             new JKookCommand("mckook")
                     .setDescription("McKook 插件在 Kook 平台的主命令。")
-                    .addSubcommand(infoSubCommand) // 添加由 InfoCmd 构建的 info 子命令
+                    .addSubcommand(infoSubCommand)
                     .addSubcommand(bindSubCommand)
                     .executesUser((sender, arguments, message) -> {
-                        message.reply(new MarkdownComponent(
-                                "**McKook Kook 命令帮助:**\n\n" +
-                                        "- `/mckook info` - 获取您的 Kook 用户信息。\n" +
-                                        "- `/mckook bind` - 管理账户绑定 (输入 `/mckook bind` 查看更多选项)。\n" +
-                                        "\n请使用 `/mckook <子命令>` 来执行具体操作。"
-                        ));
+                        String helpMessage = BaseConfig.instance.getMessageBox().getMessage(null, "message.kook_message.help");
+                        message.reply(new MarkdownComponent(helpMessage));
                     })
                     .register(kbcInternalPlugin);
 

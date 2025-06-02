@@ -3,15 +3,16 @@ package com.meteor.mckook.kook.command.cmds;
 import com.meteor.mckook.McKook;
 import com.meteor.mckook.kook.KookBot;
 import com.meteor.mckook.kook.service.LinkService;
+import com.meteor.mckook.util.BaseConfig;
 import snw.jkook.command.JKookCommand;
-import snw.jkook.entity.Guild; // 新增导入
+import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.message.Message;
 import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.message.component.TextComponent;
 
-import java.util.Collection; // 新增导入
-import java.util.Map;       // 新增导入
+import java.util.Collection;
+import java.util.Map;
 
 public class BindCmd {
 
@@ -26,6 +27,18 @@ public class BindCmd {
         this.kookBot = kookBot;
     }
 
+    private String getMessageFromConfig(String key) {
+        return BaseConfig.instance.getMessageBox().getMessage(null, "message.kook_message.bind." + key);
+    }
+
+    private String getMessageWithPlaceholders(String key, Map<String, String> placeholders) {
+        String message = getMessageFromConfig(key);
+        for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+            message = message.replace("{" + entry.getKey() + "}", entry.getValue());
+        }
+        return message;
+    }
+
     /**
      * 检查用户是否拥有执行绑定命令所需的管理员权限。
      * @param sender 指令发送者
@@ -34,55 +47,51 @@ public class BindCmd {
      */
     private boolean checkAdminPermission(User sender, Message message) {
         if (kookBot == null || kookBot.isInvalid()) {
-            message.reply(new TextComponent("错误：Kook机器人服务当前不可用，无法验证权限。"));
+            message.reply(new TextComponent(getMessageFromConfig("bot_unavailable")));
             mcKookPlugin.getLogger().warning("[KookBindCmd] KookBot is null or invalid when checking admin permission.");
             return false;
         }
 
-        Guild primaryGuild = kookBot.getGuild(); // kookBot.getGuild() 内部已处理 KookBot 无效或 Guild ID 未配置的情况
+        Guild primaryGuild = kookBot.getGuild();
         if (primaryGuild == null) {
-            message.reply(new TextComponent("错误：无法获取主服务器信息，无法验证权限。请检查插件配置 (setting.guild)。"));
-            // KookBot.getGuild() 内部会记录更详细的日志
+            message.reply(new TextComponent(getMessageFromConfig("guild_error")));
             return false;
         }
 
         Map<String, Integer> configuredRolesMap = mcKookPlugin.getConfiguredRoles();
         if (configuredRolesMap == null || configuredRolesMap.isEmpty()) {
-            message.reply(new TextComponent("错误：插件角色配置未加载，无法验证权限。请联系管理员检查后台日志。"));
+            message.reply(new TextComponent(getMessageFromConfig("roles_config_error")));
             mcKookPlugin.getLogger().warning("[KookBindCmd] Configured roles map is null or empty when checking admin permission. This might indicate a config loading issue.");
             return false;
         }
 
         Integer adminRoleId = configuredRolesMap.get(ADMIN_ROLE_KEY);
         if (adminRoleId == null) {
-            message.reply(new TextComponent("错误：管理员角色 (" + ADMIN_ROLE_KEY + ") 未在插件配置 (setting.roles) 中正确定义，无法执行此操作。"));
+            message.reply(new TextComponent(getMessageFromConfig("admin_role_undefined")));
             mcKookPlugin.getLogger().warning("[KookBindCmd] Admin role ID for key '" + ADMIN_ROLE_KEY + "' not found in configuration. Please ensure it's defined in config.yml under setting.roles.");
             return false;
         }
 
-        // --- 修正开始 ---
-        // 获取用户在主服务器上的角色列表
         Collection<Integer> userRoles = sender.getRoles(primaryGuild);
-        // --- 修正结束 ---
 
         if (userRoles != null && userRoles.contains(adminRoleId)) {
             return true;
         }
 
-        message.reply(new MarkdownComponent("🚫 **权限不足**：您需要拥有 **" + ADMIN_ROLE_KEY + "** 身份才能执行此操作。"));
+        message.reply(new MarkdownComponent(getMessageFromConfig("no_permission")));
         return false;
     }
 
     // 辅助方法：获取 LinkService 实例
     private LinkService getLinkService(User sender, Message message) {
         if (kookBot == null || kookBot.isInvalid()) {
-            message.reply(new TextComponent("错误：Kook机器人服务当前不可用。"));
+            message.reply(new TextComponent(getMessageFromConfig("bot_unavailable")));
             mcKookPlugin.getLogger().warning("[KookBindCmd] KookBot is null or invalid when trying to get LinkService for Kook command.");
             return null;
         }
         LinkService linkService = kookBot.getService(LinkService.class);
         if (linkService == null || linkService.linkRepository == null) {
-            message.reply(new TextComponent("错误：绑定服务 (LinkService) 未初始化，无法执行操作。请联系管理员。"));
+            message.reply(new TextComponent(getMessageFromConfig("service_unavailable")));
             mcKookPlugin.getLogger().warning("[KookBindCmd] LinkService or its LinkRepository is null when requested by Kook command.");
             return null;
         }
@@ -95,10 +104,10 @@ public class BindCmd {
         return new JKookCommand("add")
                 .setDescription("添加一个新的玩家-Kook绑定。 (仅限管理员)")
                 .executesUser((sender, args, message) -> {
-                    if (!checkAdminPermission(sender, message)) return; // 权限检查
+                    if (!checkAdminPermission(sender, message)) return;
 
                     if (args.length < 2) {
-                        message.reply(new TextComponent("用法: /mckook bind add <玩家名> <Kook用户ID>"));
+                        message.reply(new TextComponent(getMessageWithPlaceholders("add.usage", Map.of())));
                         return;
                     }
                     String playerName = args[0].toString();
@@ -107,13 +116,17 @@ public class BindCmd {
                     LinkService linkService = getLinkService(sender, message);
                     if (linkService == null) return;
 
-                    message.reply(new TextComponent("正在尝试为玩家 `" + playerName + "` 和 Kook ID `" + kookId + "` 添加绑定..."));
+                    Map<String, String> placeholders = Map.of(
+                        "player", playerName,
+                        "kookId", kookId
+                    );
+                    message.reply(new TextComponent(getMessageWithPlaceholders("add.processing", placeholders)));
 
                     linkService.linkRepository.bind(
                             playerName,
                             kookId,
-                            successMsg -> message.reply(new MarkdownComponent("✅ **绑定成功**: " + successMsg)),
-                            errorMsg -> message.reply(new MarkdownComponent("⚠️ **绑定失败**: " + errorMsg))
+                            successMsg -> message.reply(new MarkdownComponent(getMessageWithPlaceholders("operation.success", Map.of("operation", "绑定", "message", successMsg)))),
+                            errorMsg -> message.reply(new MarkdownComponent(getMessageWithPlaceholders("operation.error", Map.of("operation", "绑定", "message", errorMsg))))
                     );
                 });
     }
@@ -122,10 +135,10 @@ public class BindCmd {
         return new JKookCommand("getplayer")
                 .setDescription("查询指定玩家名绑定的Kook ID。 (仅限管理员)")
                 .executesUser((sender, args, message) -> {
-                    if (!checkAdminPermission(sender, message)) return; // 权限检查
+                    if (!checkAdminPermission(sender, message)) return;
 
                     if (args.length < 1) {
-                        message.reply(new TextComponent("用法: /mckook bind getplayer <玩家名>"));
+                        message.reply(new TextComponent(getMessageWithPlaceholders("getplayer.usage", Map.of())));
                         return;
                     }
                     String playerName = args[0].toString();
@@ -133,12 +146,12 @@ public class BindCmd {
                     LinkService linkService = getLinkService(sender, message);
                     if (linkService == null) return;
 
-                    message.reply(new TextComponent("正在查询玩家 `" + playerName + "` 绑定的 Kook ID..."));
+                    message.reply(new TextComponent(getMessageWithPlaceholders("getplayer.processing", Map.of("player", playerName))));
 
                     linkService.linkRepository.bindgetKookIdByPlayerName(
                             playerName,
-                            kookId -> message.reply(new MarkdownComponent("玩家 `" + playerName + "` 绑定的 Kook ID 是: `" + kookId + "`")),
-                            errorMsg -> message.reply(new MarkdownComponent("⚠️ **查询失败**: " + errorMsg))
+                            kookId -> message.reply(new MarkdownComponent(getMessageWithPlaceholders("getplayer.result", Map.of("player", playerName, "kookId", kookId)))),
+                            errorMsg -> message.reply(new MarkdownComponent(getMessageWithPlaceholders("operation.error", Map.of("operation", "查询", "message", errorMsg))))
                     );
                 });
     }
@@ -147,10 +160,10 @@ public class BindCmd {
         return new JKookCommand("getkook")
                 .setDescription("查询指定Kook ID绑定的玩家名。 (仅限管理员)")
                 .executesUser((sender, args, message) -> {
-                    if (!checkAdminPermission(sender, message)) return; // 权限检查
+                    if (!checkAdminPermission(sender, message)) return;
 
                     if (args.length < 1) {
-                        message.reply(new TextComponent("用法: /mckook bind getkook <Kook用户ID>"));
+                        message.reply(new TextComponent(getMessageWithPlaceholders("getkook.usage", Map.of())));
                         return;
                     }
                     String kookId = args[0].toString();
@@ -158,12 +171,12 @@ public class BindCmd {
                     LinkService linkService = getLinkService(sender, message);
                     if (linkService == null) return;
 
-                    message.reply(new TextComponent("正在查询 Kook ID `" + kookId + "` 绑定的玩家名..."));
+                    message.reply(new TextComponent(getMessageWithPlaceholders("getkook.processing", Map.of("kookId", kookId))));
 
                     linkService.linkRepository.bindgetPlayerNameByKookId(
                             kookId,
-                            playerName -> message.reply(new MarkdownComponent("Kook ID `" + kookId + "` 绑定的玩家名是: `" + playerName + "`")),
-                            errorMsg -> message.reply(new MarkdownComponent("⚠️ **查询失败**: " + errorMsg))
+                            playerName -> message.reply(new MarkdownComponent(getMessageWithPlaceholders("getkook.result", Map.of("kookId", kookId, "player", playerName)))),
+                            errorMsg -> message.reply(new MarkdownComponent(getMessageWithPlaceholders("operation.error", Map.of("operation", "查询", "message", errorMsg))))
                     );
                 });
     }
@@ -172,10 +185,10 @@ public class BindCmd {
         return new JKookCommand("removeplayer")
                 .setDescription("移除一个玩家的绑定。 (仅限管理员)")
                 .executesUser((sender, args, message) -> {
-                    if (!checkAdminPermission(sender, message)) return; // 权限检查
+                    if (!checkAdminPermission(sender, message)) return;
 
                     if (args.length < 1) {
-                        message.reply(new TextComponent("用法: /mckook bind removeplayer <玩家名>"));
+                        message.reply(new TextComponent(getMessageWithPlaceholders("removeplayer.usage", Map.of())));
                         return;
                     }
                     String playerName = args[0].toString();
@@ -183,12 +196,12 @@ public class BindCmd {
                     LinkService linkService = getLinkService(sender, message);
                     if (linkService == null) return;
 
-                    message.reply(new TextComponent("正在尝试移除玩家 `" + playerName + "` 的绑定..."));
+                    message.reply(new TextComponent(getMessageWithPlaceholders("removeplayer.processing", Map.of("player", playerName))));
 
                     linkService.linkRepository.bindremoveByplayerName(
                             playerName,
-                            successMsg -> message.reply(new MarkdownComponent("✅ **移除成功**: " + successMsg)),
-                            errorMsg -> message.reply(new MarkdownComponent("⚠️ **移除失败**: " + errorMsg))
+                            successMsg -> message.reply(new MarkdownComponent(getMessageWithPlaceholders("operation.success", Map.of("operation", "移除", "message", successMsg)))),
+                            errorMsg -> message.reply(new MarkdownComponent(getMessageWithPlaceholders("operation.error", Map.of("operation", "移除", "message", errorMsg))))
                     );
                 });
     }
@@ -197,10 +210,10 @@ public class BindCmd {
         return new JKookCommand("removekook")
                 .setDescription("移除一个Kook ID的绑定。 (仅限管理员)")
                 .executesUser((sender, args, message) -> {
-                    if (!checkAdminPermission(sender, message)) return; // 权限检查
+                    if (!checkAdminPermission(sender, message)) return;
 
                     if (args.length < 1) {
-                        message.reply(new TextComponent("用法: /mckook bind removekook <Kook用户ID>"));
+                        message.reply(new TextComponent(getMessageWithPlaceholders("removekook.usage", Map.of())));
                         return;
                     }
                     String kookId = args[0].toString();
@@ -208,12 +221,12 @@ public class BindCmd {
                     LinkService linkService = getLinkService(sender, message);
                     if (linkService == null) return;
 
-                    message.reply(new TextComponent("正在尝试移除 Kook ID `" + kookId + "` 的绑定..."));
+                    message.reply(new TextComponent(getMessageWithPlaceholders("removekook.processing", Map.of("kookId", kookId))));
 
                     linkService.linkRepository.bindremoveByKookId(
                             kookId,
-                            successMsg -> message.reply(new MarkdownComponent("✅ **移除成功**: " + successMsg)),
-                            errorMsg -> message.reply(new MarkdownComponent("⚠️ **移除失败**: " + errorMsg))
+                            successMsg -> message.reply(new MarkdownComponent(getMessageWithPlaceholders("operation.success", Map.of("operation", "移除", "message", successMsg)))),
+                            errorMsg -> message.reply(new MarkdownComponent(getMessageWithPlaceholders("operation.error", Map.of("operation", "移除", "message", errorMsg))))
                     );
                 });
     }
@@ -231,19 +244,10 @@ public class BindCmd {
                 .addSubcommand(createBindRemovePlayerSubCommand())
                 .addSubcommand(createBindRemoveKookSubCommand())
                 .executesUser((sender, args, message) -> {
-                    if (!checkAdminPermission(sender, message)) return; // 权限检查
+                    if (!checkAdminPermission(sender, message)) return;
 
                     // 当用户只输入 /mckook bind 时，显示帮助信息
-                    message.reply(new MarkdownComponent(
-                            "**McKook 绑定命令帮助 (仅限管理员):**\n\n" +
-                                    "使用以下子命令来管理绑定:\n" +
-                                    "- `/mckook bind add <玩家名> <Kook用户ID>` - 添加一个新的绑定。\n" +
-                                    "- `/mckook bind getplayer <玩家名>` - 查询指定玩家名绑定的Kook ID。\n" +
-                                    "- `/mckook bind getkook <Kook用户ID>` - 查询指定Kook ID绑定的玩家名。\n" +
-                                    "- `/mckook bind removeplayer <玩家名>` - 按玩家名移除绑定。\n" +
-                                    "- `/mckook bind removekook <Kook用户ID>` - 按Kook ID移除绑定。\n\n" +
-                                    "**提示:** `<Kook用户ID>` 是用户在Kook平台的用户ID。您可以通过 `/mckook info` 命令查看用户自己的Kook用户ID。"
-                    ));
+                    message.reply(new MarkdownComponent(getMessageFromConfig("help")));
                 });
     }
 }
