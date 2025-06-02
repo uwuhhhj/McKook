@@ -35,7 +35,9 @@ public abstract class AbstractKookMessage implements Listener, snw.jkook.event.L
 
     public void register(){
         this.plugin.getServer().getPluginManager().registerEvents(this,plugin);
-        getPlugin().getKookBot().registerKookListener(this);
+        if (getPlugin().getKookBot() != null && !getPlugin().getKookBot().isInvalid()) {
+            getPlugin().getKookBot().registerKookListener(this);
+        }
     }
 
     public Map<String,String> context(PlayerEvent playerEvent){
@@ -45,6 +47,16 @@ public abstract class AbstractKookMessage implements Listener, snw.jkook.event.L
     }
 
     public void unRegister(){
+        // 注销 Bukkit 事件监听器
         HandlerList.unregisterAll((Listener)this);
+        
+        // 注销 Kook 事件监听器
+        if (getPlugin().getKookBot() != null && !getPlugin().getKookBot().isInvalid()) {
+            try {
+                getPlugin().getKookBot().unRegisterKookListener();
+            } catch (Exception e) {
+                getPlugin().getLogger().warning("[" + getName() + "] 注销 Kook 事件监听器时发生错误: " + e.getMessage());
+            }
+        }
     }
 }

@@ -5,7 +5,6 @@ import com.meteor.mckook.kook.service.LinkService;
 import com.meteor.mckook.message.AbstractKookMessage;
 import com.meteor.mckook.model.link.KookUser;
 import com.meteor.mckook.model.link.LinkCache;
-import com.meteor.mckook.util.BaseConfig;
 import com.meteor.mckook.util.TextComponentHelper;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
