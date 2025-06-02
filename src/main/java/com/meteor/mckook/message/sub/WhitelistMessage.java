@@ -32,6 +32,10 @@ public class WhitelistMessage extends AbstractKookMessage {
      */
     private final HashMap<Player, Boolean> unlinkedPlayerCache = new HashMap<>(); // 重命名 cache 为 unlinkedPlayerCache 以明确用途
 
+    // 新增：Title提醒相关字段
+    private final boolean titleReminderEnabled; // 从 config.yml 的 setting.whitelist.title-reminder.enabled 读取
+    private final long titleReminderIntervalTicks; // 从 config.yml 的 setting.whitelist.title-reminder.interval-seconds 计算
+    private final Map<Player, Integer> titleReminderTasks = new HashMap<>(); // 存储每个玩家的Title提醒任务ID
 
     private final String channelName; // 从 WhitelistMessage.yml 读取
     private final boolean whitelistModuleEnabled; // 从 config.yml 的 setting.whitelist.enable 读取
@@ -68,11 +72,27 @@ public class WhitelistMessage extends AbstractKookMessage {
                 this.actionCheckEnabled = false; // 默认禁用 action 检查
                 plugin.getLogger().warning(LOG_PREFIX + "主配置文件 config.yml 中 'setting.whitelist.check-range' 部分未找到。移动限制功能将禁用。");
             }
+
+            // 新增：读取Title提醒设置
+            ConfigurationSection titleReminderSettings = whitelistSettings.getConfigurationSection("title-reminder");
+            if (titleReminderSettings != null) {
+                this.titleReminderEnabled = titleReminderSettings.getBoolean("enabled", true);
+                int intervalSeconds = titleReminderSettings.getInt("interval-seconds", 30);
+                this.titleReminderIntervalTicks = intervalSeconds * 20L;
+                plugin.getLogger().info(LOG_PREFIX + "Title提醒功能已" + (this.titleReminderEnabled ? "启用" : "禁用") + 
+                    "，间隔: " + intervalSeconds + "秒");
+            } else {
+                this.titleReminderEnabled = true; // 默认启用
+                this.titleReminderIntervalTicks = 30 * 20L; // 默认30秒
+                plugin.getLogger().warning(LOG_PREFIX + "主配置文件 config.yml 中 'setting.whitelist.title-reminder' 部分未找到。使用默认设置。");
+            }
         } else {
             plugin.getLogger().warning(LOG_PREFIX + "主配置文件 config.yml 中未找到 'setting.whitelist' 部分。将使用默认设置禁用白名单功能。");
             this.whitelistModuleEnabled = false;
             this.actionCheckEnabled = false;
             this.kickDelayTicks = 10 * 20L; // 默认10秒
+            this.titleReminderEnabled = true; // 默认启用
+            this.titleReminderIntervalTicks = 30 * 20L; // 默认30秒
         }
 
         // 从 WhitelistMessage.yml 读取消息模板
@@ -174,7 +194,12 @@ public class WhitelistMessage extends AbstractKookMessage {
         sendLinkPromptMessage(player, verifyCode);
         getPlugin().getLogger().info(LOG_PREFIX + "玩家 " + playerName + " 未绑定KOOK账户，已发送绑定提示。");
 
-        // 3. 根据 joinKickEnabledInConfig 决定是否计划踢出
+        // 3. 如果启用了Title提醒，开始循环发送Title
+        if (this.titleReminderEnabled) {
+            startTitleReminder(player, verifyCode);
+        }
+
+        // 4. 根据 joinKickEnabledInConfig 决定是否计划踢出
         boolean joinKickEnabledInConfig = getPlugin().getConfig().getBoolean("setting.whitelist.check-range.join", false);
         if (joinKickEnabledInConfig) {
             getPlugin().getLogger().info(LOG_PREFIX + "玩家 " + playerName + " 的 join 踢出检查已启用，将计划踢出。");
@@ -246,7 +271,6 @@ public class WhitelistMessage extends AbstractKookMessage {
 
         // 直接使用 API 发送 Title
         player.sendTitle(titleText, subtitleText, fadeIn, stay, fadeOut);
-        getPlugin().getLogger().info(LOG_PREFIX + "已向玩家 " + player.getName() + " 发送 Title 绑定提示。");
     }
     /**
      * 计划一个任务，在指定延迟后检查并踢出未绑定的玩家。
@@ -272,6 +296,9 @@ public class WhitelistMessage extends AbstractKookMessage {
     @org.bukkit.event.EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
+        // 停止Title提醒任务
+        stopTitleReminder(player);
+        // 从未绑定缓存中移除
         if (this.unlinkedPlayerCache.remove(player) != null) {
             getPlugin().getLogger().info(LOG_PREFIX + "玩家 " + player.getName() + " 离线，已从临时行为限制缓存中移除。");
         }
@@ -300,6 +327,46 @@ public class WhitelistMessage extends AbstractKookMessage {
                     event.getFrom().getBlockZ() != event.getTo().getBlockZ()) {
                 event.setCancelled(true);
             }
+        }
+    }
+
+    // 新增：开始Title提醒任务
+    private void startTitleReminder(Player player, String verifyCode) {
+        // 如果玩家已有提醒任务，先取消
+        stopTitleReminder(player);
+
+        // 创建新的循环任务
+        int taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(getPlugin(), () -> {
+            if (player.isOnline() && !linkService.isLinked(player.getName())) {
+                // 从配置文件获取Title消息
+                String titleText = messageFileConfiguration.getString("message.prompt-title.title", "&c请绑定KOOK账户！");
+                String subtitleText = messageFileConfiguration.getString("message.prompt-title.subtitle", "&f您的验证码是: &b&l{verifyCode}");
+                int fadeIn = messageFileConfiguration.getInt("message.prompt-title.fadeIn", 20);
+                int stay = messageFileConfiguration.getInt("message.prompt-title.stay", 100);
+                int fadeOut = messageFileConfiguration.getInt("message.prompt-title.fadeOut", 20);
+
+                // 替换占位符并发送Title
+                titleText = ChatColor.translateAlternateColorCodes('&', titleText.replace("{player}", player.getName()));
+                subtitleText = ChatColor.translateAlternateColorCodes('&', 
+                    subtitleText.replace("{verifyCode}", verifyCode).replace("{player}", player.getName()));
+                player.sendTitle(titleText, subtitleText, fadeIn, stay, fadeOut);
+            } else {
+                // 如果玩家已经绑定或离线，停止提醒
+                stopTitleReminder(player);
+            }
+        }, this.titleReminderIntervalTicks, this.titleReminderIntervalTicks);
+
+        // 保存任务ID
+        titleReminderTasks.put(player, taskId);
+        getPlugin().getLogger().info(LOG_PREFIX + "已为玩家 " + player.getName() + " 启动Title提醒任务 (TaskID: " + taskId + ")");
+    }
+
+    // 新增：停止Title提醒任务
+    private void stopTitleReminder(Player player) {
+        Integer taskId = titleReminderTasks.remove(player);
+        if (taskId != null) {
+            Bukkit.getScheduler().cancelTask(taskId);
+            getPlugin().getLogger().info(LOG_PREFIX + "已停止玩家 " + player.getName() + " 的Title提醒任务 (TaskID: " + taskId + ")");
         }
     }
 }

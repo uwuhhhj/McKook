@@ -26,6 +26,10 @@ setting:
       join: false # join - 加入服务器 - 玩家加入服务器时检测是否在绑定的数据库中，如果不在则踢出
       action: false # action - 被拦截者缓存默认不启用 - 玩家可以加入服务器，但如果未绑定数据库，则会阻止玩家移动操作
     kick-delay-seconds: 10 # 玩家收到验证码提示后，多少秒后被踢出服务器 (单位: 秒)
+    # 新增：Title提醒设置
+    title-reminder:
+      enabled: true # 是否启用循环Title提醒
+      interval-seconds: 30 # 每隔多少秒发送一次Title提醒 (单位: 秒)
   # 消息桥接设置
   message-bridge:
     player-join:
