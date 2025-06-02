@@ -5,7 +5,7 @@ message:
     - '@prefix@ &f&l|HELP'
     - ''
     - '&7/mckook link &e绑定KOOK账号'
-    - '&7/mkook reload &e重载配置文件'k:
+    - '&7/mkook reload &e重载配置文件'
   link:
     already-link: '@prefix@ &7请不要重复绑定'
     exist-verify: '@prefix@ &7有一个未处理的绑定请求，你的验证码是 &c@verify-code@'

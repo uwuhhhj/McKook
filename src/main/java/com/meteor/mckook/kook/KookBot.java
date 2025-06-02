@@ -169,15 +169,53 @@ public class KookBot {
      * 关闭链接
      */
     public void close(){
-        if(isInvalid()) return;
-        if (kbcClient != null) { // Add null check for kbcClient
+        if (isInvalid()) return;
+    
+        if (kbcClient != null) {
             try {
-                kbcClient.shutdown();
+                kbcClient.shutdown(); // 先执行 KBCClient 原生关闭逻辑
             } catch (Exception e) {
                 plugin.getLogger().log(Level.WARNING, "[KookBot] 关闭 KBCClient 时发生错误: ", e);
             }
+    
+            // ✅ 反射方式手动释放 OkHttpClient 线程池
+            try {
+                Object networkSystem = kbcClient.getNetworkSystem();
+    
+                java.lang.reflect.Field connectorField = networkSystem.getClass().getDeclaredField("connector");
+                connectorField.setAccessible(true);
+                Object connector = connectorField.get(networkSystem);
+    
+                if (connector == null) {
+                    plugin.getLogger().info("[KookBot] connector 为 null，跳过 OkHttp 清理。");
+                    return;
+                }
+    
+                java.lang.reflect.Method getParent = connector.getClass().getMethod("getParent");
+                Object realClient = getParent.invoke(connector);
+    
+                java.lang.reflect.Field networkClientField = realClient.getClass().getDeclaredField("networkClient");
+                networkClientField.setAccessible(true);
+                Object networkClient = networkClientField.get(realClient);
+    
+                java.lang.reflect.Field okHttpClientField = networkClient.getClass().getDeclaredField("client");
+                okHttpClientField.setAccessible(true);
+                okhttp3.OkHttpClient okHttpClient = (okhttp3.OkHttpClient) okHttpClientField.get(networkClient);
+    
+                okHttpClient.dispatcher().executorService().shutdown();
+                okHttpClient.connectionPool().evictAll();
+                if (okHttpClient.cache() != null) {
+                    okHttpClient.cache().close();
+                }
+    
+                plugin.getLogger().info("[KookBot] ✅ 成功关闭 OkHttpClient 线程池。");
+    
+            } catch (Exception e) {
+                plugin.getLogger().warning("[KookBot] ❌ 释放 OkHttpClient 失败：" + e.getClass().getSimpleName() + ": " + e.getMessage());
+            }
         }
     }
+    
 
     public KBCClient getKbcClient() {
         return kbcClient;
