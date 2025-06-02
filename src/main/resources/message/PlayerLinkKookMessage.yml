@@ -5,7 +5,11 @@ channels:
 enable-code-binding: false # true 为启用, false 为禁用
 message:
   success:
-    minecraft: message.link.link-success
+    minecraft:
+      - ''
+      - '&f 已成功绑定KOOK账户@user-nickname@'
+      - '&f 退出重进即可'
+      - ''
     kook: |
       [
         {

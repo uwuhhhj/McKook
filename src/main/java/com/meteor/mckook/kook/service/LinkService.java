@@ -69,7 +69,7 @@ public class LinkService implements KookService {
         kookUser.setAvatar(user.getAvatarUrl(false));
         kookUser.setMobileVerified(true);
         kookUser.setJoinedAt(System.currentTimeMillis());
-        kookUser.setNickName(player);
+        kookUser.setNickName(user.getNickName(kookBot.getGuild()));
         linkRepository.link(player,kookUser);
         return kookUser;
     }

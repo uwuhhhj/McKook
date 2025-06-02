@@ -15,8 +15,10 @@ import snw.jkook.entity.User;
 import snw.jkook.event.EventHandler;
 import snw.jkook.event.channel.ChannelMessageEvent;
 import snw.jkook.event.pm.PrivateMessageReceivedEvent;
+import org.bukkit.ChatColor;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class PlayerLinkMessage extends AbstractKookMessage {
@@ -24,7 +26,7 @@ public class PlayerLinkMessage extends AbstractKookMessage {
 
     private ConfigurationSection channel;
     private String successLinkMessage;
-    private String successLinkMessageMinecraft;
+    private List<String> successLinkMessageMinecraft;
     private final YamlConfiguration config;
     String verifyCode_Error_message = "你输入的不是验证码哦 " ;
     String alreadybind_Message = "你已经绑定其他玩家id了" ;
@@ -39,8 +41,8 @@ public class PlayerLinkMessage extends AbstractKookMessage {
         this.channel = setting.getConfigurationSection("channel");
         this.config = yamlConfiguration;
         this.linkService = plugin.getKookBot().getService(LinkService.class);
-        this.successLinkMessage = yamlConfiguration.getString("message.success.kook");
-        this.successLinkMessageMinecraft = yamlConfiguration.getString("message.success.minecraft");
+        this.successLinkMessage = config.getString("message.success.kook");
+        this.successLinkMessageMinecraft = config.getStringList("message.success.minecraft");
     }
 
     @Override
@@ -99,22 +101,23 @@ public class PlayerLinkMessage extends AbstractKookMessage {
                 return;
             }
             // 3. 执行绑定
-
             getPlugin().getLogger().info("[DEBUG] 执行绑定: " + playerName + " <-> " + sender.getId());
             KookUser kookUser = linkService.link(playerName, sender);
 
-            // 4. 发送绑定成功消息
+            // 4. KOOK内发送绑定成功消息
             Map<String, String> context = new HashMap<>();
             context.put("player", playerName);
             context.put("@user-nickname@", kookUser.getNickName());
 
             channelMessageEvent.getMessage().reply(TextComponentHelper.json2CardComponent(successLinkMessage, context));
-
+            // 5. 游戏内发送绑定成功消息
             Player player = Bukkit.getPlayerExact(playerName);
             if (player != null) {
-                BaseConfig.instance.getMessageBox()
-                        .getMessageList(context, successLinkMessageMinecraft)
-                        .forEach(player::sendMessage);
+                for (String message : successLinkMessageMinecraft) {
+                    message = message.replace("@user-nickname@", kookUser.getNickName());
+                    message = ChatColor.translateAlternateColorCodes('&', message);
+                    player.sendMessage(message);
+                }
                 getPlugin().getLogger().info("[DEBUG] 绑定完成");
             }else {
                 getPlugin().getLogger().info("[DEBUG] 玩家不在线，跳过游戏内消息发送: " + playerName);
