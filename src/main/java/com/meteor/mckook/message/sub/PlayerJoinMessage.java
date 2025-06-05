@@ -3,6 +3,7 @@ package com.meteor.mckook.message.sub;
 import com.meteor.mckook.McKook;
 import com.meteor.mckook.kook.service.LinkService;
 import com.meteor.mckook.message.AbstractKookMessage;
+import com.meteor.mckook.config.Config;
 import com.meteor.mckook.util.TextComponentHelper;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.EventHandler;
@@ -38,8 +39,8 @@ public class PlayerJoinMessage extends AbstractKookMessage implements Listener {
         super(plugin, messageFileConfig); // messageFileConfig 是 PlayerJoinKookMessage.yml
 
         // 从主配置文件 config.yml 读取启用状态
-        this.joinMessagesEnabled = plugin.getConfig().getBoolean("setting.message-bridge.player-join.enabled", true);
-        this.quitMessagesEnabled = plugin.getConfig().getBoolean("setting.message-bridge.player-quit.enabled", true);
+        this.joinMessagesEnabled = Config.get().isPlayerJoinMessageEnabled();
+        this.quitMessagesEnabled = Config.get().isPlayerQuitMessageEnabled();
 
         // 从 PlayerJoinKookMessage.yml 读取消息格式
         this.joinMessageFormat = messageFileConfig.getString(CONFIG_KEY_MESSAGE_JOIN);

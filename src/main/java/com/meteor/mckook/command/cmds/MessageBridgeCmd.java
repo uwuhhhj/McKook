@@ -2,6 +2,7 @@ package com.meteor.mckook.command.cmds;
 
 import com.meteor.mckook.McKook;
 import com.meteor.mckook.command.SubCmd;
+import com.meteor.mckook.config.Config;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
@@ -115,8 +116,8 @@ public class MessageBridgeCmd extends SubCmd {
         }
 
         try {
-            plugin.getConfig().set(configPath, newState);
-            plugin.saveConfig();
+            Config.get().set(configPath, newState);
+            Config.get().save();
             plugin.reloadMessageSystem(); // 确保这个方法会重新加载 PlayerChatMessage 并使其读取新配置
 
             sender.sendMessage(ChatColor.GREEN + friendlyName + " 功能已" + (newState ? "开启" : "关闭") + "。配置已保存并重载。");

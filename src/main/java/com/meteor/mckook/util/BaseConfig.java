@@ -1,6 +1,7 @@
 package com.meteor.mckook.util;
 
 import com.meteor.mckook.McKook;
+import com.meteor.mckook.config.Config;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
@@ -30,7 +31,7 @@ public class BaseConfig {
     }
 
     public FileConfiguration getConfig(){
-        return plugin.getConfig();
+        return Config.get().raw();
     }
 
     public void reload(){
@@ -40,7 +41,7 @@ public class BaseConfig {
                     File file = new File(dataFolder,fileName);
                     if(!file.exists()) plugin.saveResource(fileName,false);
                 });
-        plugin.reloadConfig();
+        Config.get().reload();
         messageBox = MessageBox.createMessageBox(plugin,"message.yml");
     }
 
