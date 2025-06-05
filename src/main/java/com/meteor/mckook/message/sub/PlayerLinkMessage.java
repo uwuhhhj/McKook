@@ -67,7 +67,7 @@ public class PlayerLinkMessage extends AbstractKookMessage {
                 getPlugin().getLogger().warning("[McKook] 未配置“白名单申请”的 ID！");
                 return;
             }
-
+            //配置消息文件中是否为白名单申请频道？不是就返回
             if (! channelMessageEvent.getChannel().getId().equals(configuredId)) {
                 return;
             }

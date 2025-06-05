@@ -148,10 +148,7 @@ public class InfoCmd extends BaseCommand {
                         } else {
                             replyContent.append("  服务器角色 ID 列表: `无`\n");
                         }
-                    } else {
-                        replyContent.append("未能获取到插件配置的主服务器信息，部分信息可能无法显示。\n");
-                        replyContent.append("全局完整名称: `").append(sender.getFullName(null)).append("`\n");
-                    }
+                    } 
 
                     replyContent.append("--------------------------\n");
                     replyContent.append("是否为 VIP: ").append(sender.isVip() ? "是" : "否").append("\n");

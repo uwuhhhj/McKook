@@ -13,7 +13,6 @@ import snw.jkook.message.component.TextComponent;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.HashMap;
 
 /**
  * Kook 命令的抽象基类，提供通用的命令处理功能
