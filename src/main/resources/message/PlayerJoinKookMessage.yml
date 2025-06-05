@@ -29,27 +29,27 @@ message:
             ]
         }
         ]
-
+    
     join: |
-    [
-      {
-        "type": "card",
-        "theme": "info",
-        "size": "sm",
-        "modules": [
-          {
-            "type": "section",
-            "text": {
-              "type": "plain-text",
-              "content": "{player} 加入了游戏\nKook状态: {kook_status}" # 添加了 Kook 状态占位符
-            },
-            "mode": "left",
-            "accessory": {
-              "type": "image",
-              "src": "https://minotar.net/avatar/{player}/32.png",
-              "size": "sm"
+        [
+        {
+            "type": "card",
+            "theme": "info",
+            "size": "sm",
+            "modules": [
+            {
+                "type": "section",
+                "text": {
+                "type": "plain-text",
+                "content": "{player} 加入了游戏\nKook状态: {kook_status}" # 添加了 Kook 状态占位符
+                },
+                "mode": "left",
+                "accessory": {
+                "type": "image",
+                "src": "https://minotar.net/avatar/{player}/32.png",
+                "size": "sm"
+                }
             }
-          }
+            ]
+        }
         ]
-      }
-    ]

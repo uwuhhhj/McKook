@@ -29,8 +29,6 @@ public final class McKook extends JavaPlugin {
 
     private MessageHandlerManager messageHandlerManager;
 
-    // 新增字段：用于存储从 config.yml 加载的角色配置
-    private Map<String, Integer> configuredRoles = new HashMap<>();
 
 
     @Override
@@ -139,24 +137,6 @@ public final class McKook extends JavaPlugin {
         });
     }
 
-
-    // 新增方法：加载角色配置
-    private void loadRoleConfigurations() {
-        getLogger().info("正在加载角色配置 (setting.roles)...");
-        this.configuredRoles.clear();
-        Map<String, Integer> roles = Config.get().getRoles();
-        if (!roles.isEmpty()) {
-            roles.forEach((name, id) -> {
-                this.configuredRoles.put(name, id);
-                getLogger().info("已加载角色: " + name + " -> ID: " + id);
-            });
-        } else {
-            getLogger().info("'setting.roles' 配置节未找到，无自定义角色信息加载。");
-        }
-        getLogger().info("角色配置加载完毕。");
-    }
-
-
     public void reloadPluginConfig() {
         Config.get().reload();
         BaseConfig.init(this);
@@ -168,14 +148,9 @@ public final class McKook extends JavaPlugin {
         messageHandlerManager.loadMessageConfigurations();
         getLogger().info("所有消息配置文件已重新加载。");
 
-        loadRoleConfigurations(); // 新增：调用加载角色配置的方法
         getLogger().info("角色配置 (setting.roles) 已重新加载。");
     }
 
-    // 新增方法：获取已配置的角色映射
-    public Map<String, Integer> getConfiguredRoles() {
-        return Collections.unmodifiableMap(this.configuredRoles); // 返回不可修改的副本，保证安全
-    }
 
 
     public void reloadMessageSystem() {
@@ -209,7 +184,6 @@ public final class McKook extends JavaPlugin {
                 getLogger().log(Level.WARNING, "注销消息处理器时出错: ", e);
             }
         }
-        configuredRoles.clear(); // 清理角色配置
 
         if (DataManager.instance != null) {
             try {

@@ -1,6 +1,7 @@
 package com.meteor.mckook.kook.command.cmds;
 
 import com.meteor.mckook.McKook;
+import com.meteor.mckook.config.Config;
 import com.meteor.mckook.kook.KookBot;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.entity.Guild;
@@ -98,7 +99,7 @@ public class InfoCmd extends BaseCommand {
                     String userId = sender.getId();
                     int identifyNum = sender.getIdentifyNumber();
 
-                    Map<String, Integer> configuredRolesMap = mcKookPlugin.getConfiguredRoles();
+                    Map<String, Integer> configuredRolesMap = Config.get().getConfiguredRoles();
                     Optional<String> userPrimaryRoleNameOpt = Optional.empty();
                     String greetingPrefix = "你好，";
 

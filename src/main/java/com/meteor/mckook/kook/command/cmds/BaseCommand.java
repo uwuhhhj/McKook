@@ -1,6 +1,7 @@
 package com.meteor.mckook.kook.command.cmds;
 
 import com.meteor.mckook.McKook;
+import com.meteor.mckook.config.Config;
 import com.meteor.mckook.kook.KookBot;
 import com.meteor.mckook.util.BaseConfig;
 import snw.jkook.command.JKookCommand;
@@ -104,7 +105,7 @@ public abstract class BaseCommand {
             return false;
         }
 
-        Map<String, Integer> configuredRolesMap = mcKookPlugin.getConfiguredRoles();
+        Map<String, Integer> configuredRolesMap = Config.get().getConfiguredRoles();
         if (configuredRolesMap == null || configuredRolesMap.isEmpty()) {
             sendErrorMessage(message, "roles_config_error");
             mcKookPlugin.getLogger().warning("[" + getCommandName() + "] Configured roles map is null or empty.");

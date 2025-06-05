@@ -1,6 +1,7 @@
 package com.meteor.mckook.kook.command.cmds;
 
 import com.meteor.mckook.McKook;
+import com.meteor.mckook.config.Config;
 import com.meteor.mckook.kook.KookBot;
 import com.meteor.mckook.kook.service.LinkService;
 import snw.jkook.command.JKookCommand;
@@ -48,7 +49,7 @@ public class BindCmd extends BaseCommand {
             return false;
         }
 
-        Map<String, Integer> configuredRolesMap = mcKookPlugin.getConfiguredRoles();
+        Map<String, Integer> configuredRolesMap = Config.get().getConfiguredRoles();
         if (configuredRolesMap == null || configuredRolesMap.isEmpty()) {
             sendErrorMessage(message, "roles_config_error");
             logWarning("Configured roles map is null or empty when checking admin permission. This might indicate a config loading issue.");
