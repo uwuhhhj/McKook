@@ -5,31 +5,32 @@ channels:
   - '公告频道'
 
 message:
-  quit: |
-    [
-      {
-        "type": "card",
-        "theme": "info",
-        "size": "sm",
-        "modules": [
-          {
-            "type": "section",
-            "text": {
-              "type": "plain-text",
-              "content": "{player} 退出了游戏"
-            },
-            "mode": "left",
-            "accessory": {
-              "type": "image",
-              "src": "https://minotar.net/avatar/{player}/32.png",
-              "size": "sm"
+  kook:
+    quit: |
+        [
+        {
+            "type": "card",
+            "theme": "info",
+            "size": "sm",
+            "modules": [
+            {
+                "type": "section",
+                "text": {
+                "type": "plain-text",
+                "content": "{player} 退出了游戏"
+                },
+                "mode": "left",
+                "accessory": {
+                "type": "image",
+                "src": "https://minotar.net/avatar/{player}/32.png",
+                "size": "sm"
+                }
             }
-          }
+            ]
+        }
         ]
-      }
-    ]
 
-  join: |
+    join: |
     [
       {
         "type": "card",

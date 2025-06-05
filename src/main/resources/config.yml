@@ -28,7 +28,7 @@ setting:
     kick-delay-seconds: 10 # 玩家收到验证码提示后，多少秒后被踢出服务器 (单位: 秒)
     # 新增：Title提醒设置
     title-reminder:
-      enabled: true # 是否启用循环Title提醒
+      enabled: false # 是否启用循环Title提醒
       interval-seconds: 30 # 每隔多少秒发送一次Title提醒 (单位: 秒)
   # 消息桥接设置
   message-bridge:

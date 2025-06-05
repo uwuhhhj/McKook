@@ -23,8 +23,8 @@ import java.util.logging.Level;
 public class PlayerJoinMessage extends AbstractKookMessage implements Listener {
 
     // 配置键常量，用于 PlayerJoinKookMessage.yml
-    private static final String CONFIG_KEY_MESSAGE_JOIN = "message.join";
-    private static final String CONFIG_KEY_MESSAGE_QUIT = "message.quit";
+    private static final String CONFIG_KEY_MESSAGE_JOIN = "message.kook.join";
+    private static final String CONFIG_KEY_MESSAGE_QUIT = "message.kook.quit";
     private static final String LOG_PREFIX = "[玩家加入消息] ";
 
     // 从主配置文件 config.yml 读取的启用状态

@@ -10,6 +10,7 @@ public class Config {
     private final McKook plugin;
     private FileConfiguration config;
     private static Config instance;
+    private Map<String, Integer> configuredRoles = new HashMap<>();
 
     private Config(McKook plugin) {
         this.plugin = plugin;
@@ -26,7 +27,9 @@ public class Config {
 
     public void reload() {
         plugin.reloadConfig();
+        plugin.getLogger().info("主配置文件 (config.yml) 已重新加载。");
         this.config = plugin.getConfig();
+        loadRoleConfigurations();
     }
 
     public void save() {
@@ -35,6 +38,25 @@ public class Config {
 
     public FileConfiguration raw() {
         return config;
+    }
+
+    private void loadRoleConfigurations() {
+        plugin.getLogger().info("正在加载角色配置 (setting.roles)...");
+        this.configuredRoles.clear();
+        Map<String, Integer> roles = getRoles();
+        if (!roles.isEmpty()) {
+            roles.forEach((name, id) -> {
+                this.configuredRoles.put(name, id);
+                plugin.getLogger().info("已加载角色: " + name + " -> ID: " + id);
+            });
+        } else {
+            plugin.getLogger().info("'setting.roles' 配置节未找到，无自定义角色信息加载。");
+        }
+        plugin.getLogger().info("角色配置加载完毕。");
+    }
+
+    public Map<String, Integer> getConfiguredRoles() {
+        return Collections.unmodifiableMap(this.configuredRoles);
     }
 
     public String getBotToken() {
@@ -85,11 +107,11 @@ public class Config {
     }
 
     public boolean isPlayerJoinMessageEnabled() {
-        return config.getBoolean("setting.message-bridge.player-join.enabled", true);
+        return config.getBoolean("setting.message-bridge.player-join.enabled", false);
     }
 
     public boolean isPlayerQuitMessageEnabled() {
-        return config.getBoolean("setting.message-bridge.player-quit.enabled", true);
+        return config.getBoolean("setting.message-bridge.player-quit.enabled", false);
     }
 
     public boolean isServerChatToKookEnabled() {
@@ -121,7 +143,7 @@ public class Config {
     }
 
     public boolean isTitleReminderEnabled() {
-        return config.getBoolean("setting.whitelist.title-reminder.enabled", true);
+        return config.getBoolean("setting.whitelist.title-reminder.enabled", false);
     }
 
     public int getTitleReminderIntervalSeconds() {
