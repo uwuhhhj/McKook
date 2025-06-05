@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.meteor.mckook.McKook;
 import com.meteor.mckook.kook.service.LinkService;
 import com.meteor.mckook.message.AbstractKookMessage;
+import com.meteor.mckook.config.Config;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -59,41 +60,13 @@ public class WhitelistMessage extends AbstractKookMessage {
         this.channelName = yamlConfiguration.getString("channel", "白名单申请");
 
         // 从主配置文件 config.yml 读取白名单设置
-        ConfigurationSection whitelistSettings = plugin.getConfig().getConfigurationSection("setting.whitelist");
-        if (whitelistSettings != null) {
-            this.whitelistModuleEnabled = whitelistSettings.getBoolean("enable", false);
-            int kickDelaySeconds = whitelistSettings.getInt("kick-delay-seconds", 10);
-            this.kickDelayTicks = kickDelaySeconds * 20L;
-            // 读取 action 设置
-            ConfigurationSection checkRangeSettings = whitelistSettings.getConfigurationSection("check-range");
-            if (checkRangeSettings != null) {
-                this.actionCheckEnabled = checkRangeSettings.getBoolean("action", false);
-            } else {
-                this.actionCheckEnabled = false; // 默认禁用 action 检查
-                plugin.getLogger().warning(LOG_PREFIX + "主配置文件 config.yml 中 'setting.whitelist.check-range' 部分未找到。移动限制功能将禁用。");
-            }
-
-            // 新增：读取Title提醒设置
-            ConfigurationSection titleReminderSettings = whitelistSettings.getConfigurationSection("title-reminder");
-            if (titleReminderSettings != null) {
-                this.titleReminderEnabled = titleReminderSettings.getBoolean("enabled", true);
-                int intervalSeconds = titleReminderSettings.getInt("interval-seconds", 30);
-                this.titleReminderIntervalTicks = intervalSeconds * 20L;
-                plugin.getLogger().info(LOG_PREFIX + "Title提醒功能已" + (this.titleReminderEnabled ? "启用" : "禁用") + 
-                    "，间隔: " + intervalSeconds + "秒");
-            } else {
-                this.titleReminderEnabled = true; // 默认启用
-                this.titleReminderIntervalTicks = 30 * 20L; // 默认30秒
-                plugin.getLogger().warning(LOG_PREFIX + "主配置文件 config.yml 中 'setting.whitelist.title-reminder' 部分未找到。使用默认设置。");
-            }
-        } else {
-            plugin.getLogger().warning(LOG_PREFIX + "主配置文件 config.yml 中未找到 'setting.whitelist' 部分。将使用默认设置禁用白名单功能。");
-            this.whitelistModuleEnabled = false;
-            this.actionCheckEnabled = false;
-            this.kickDelayTicks = 10 * 20L; // 默认10秒
-            this.titleReminderEnabled = true; // 默认启用
-            this.titleReminderIntervalTicks = 30 * 20L; // 默认30秒
-        }
+        this.whitelistModuleEnabled = Config.get().isWhitelistEnabled();
+        int kickDelaySeconds = Config.get().getWhitelistKickDelaySeconds();
+        this.kickDelayTicks = kickDelaySeconds * 20L;
+        this.actionCheckEnabled = Config.get().isWhitelistActionCheckEnabled();
+        this.titleReminderEnabled = Config.get().isTitleReminderEnabled();
+        int intervalSeconds = Config.get().getTitleReminderIntervalSeconds();
+        this.titleReminderIntervalTicks = intervalSeconds * 20L;
 
         // 从 WhitelistMessage.yml 读取消息模板
         this.promptLinkMessageTemplate = yamlConfiguration.getStringList("message.prompt-link-on-join");
@@ -200,7 +173,7 @@ public class WhitelistMessage extends AbstractKookMessage {
         }
 
         // 4. 根据 joinKickEnabledInConfig 决定是否计划踢出
-        boolean joinKickEnabledInConfig = getPlugin().getConfig().getBoolean("setting.whitelist.check-range.join", false);
+        boolean joinKickEnabledInConfig = Config.get().isWhitelistJoinKickEnabled();
         if (joinKickEnabledInConfig) {
             getPlugin().getLogger().info(LOG_PREFIX + "玩家 " + playerName + " 的 join 踢出检查已启用，将计划踢出。");
             String kickMessage = ChatColor.translateAlternateColorCodes('&',

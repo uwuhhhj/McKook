@@ -2,6 +2,7 @@ package com.meteor.mckook.message.sub;
 
 import com.meteor.mckook.McKook;
 import com.meteor.mckook.message.AbstractKookMessage;
+import com.meteor.mckook.config.Config;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
@@ -28,8 +29,8 @@ public class PlayerChatMessage extends AbstractKookMessage {
         super(plugin, messageFileConfig);
 
         // 从主配置文件 config.yml 读取启用状态
-        this.serverToKookEnabled = plugin.getConfig().getBoolean("setting.message-bridge.server-chat-to-kook.enabled", false);
-        this.kookToServerEnabled = plugin.getConfig().getBoolean("setting.message-bridge.kook-chat-to-server.enabled", false);
+        this.serverToKookEnabled = Config.get().isServerChatToKookEnabled();
+        this.kookToServerEnabled = Config.get().isKookChatToServerEnabled();
 
         // 从 PlayerChatMessage.yml 读取 Kook->服务器 的消息格式
         this.minecraftMessageFormat = messageFileConfig.getString("message_to_minecraft");
@@ -37,16 +38,12 @@ public class PlayerChatMessage extends AbstractKookMessage {
             plugin.getLogger().warning(LOG_PREFIX + "PlayerChatMessage.yml 中的 'message_to_minecraft' 未配置或为空。");
         }
 
-        ConfigurationSection setting = plugin.getConfig().getConfigurationSection("setting");
-        if (setting == null) {
-            // 这个检查应该在插件加载时更早进行，或者提供默认值
-            plugin.getLogger().severe(LOG_PREFIX + "config.yml 中缺少 setting 节点！Kook频道配置可能无法加载。");
+        ConfigurationSection channelSection = Config.get().getChannelSection();
+        if (channelSection == null) {
+            plugin.getLogger().severe(LOG_PREFIX + "config.yml 中缺少 setting.channel 节点！Kook频道配置可能无法加载。");
             this.kookChannelSettings = null;
         } else {
-            this.kookChannelSettings = setting.getConfigurationSection("channel");
-            if (this.kookChannelSettings == null) {
-                plugin.getLogger().severe(LOG_PREFIX + "config.yml 中缺少 setting.channel 节点！Kook频道配置可能无法加载。");
-            }
+            this.kookChannelSettings = channelSection;
         }
 
         // 记录实际启用的功能
@@ -73,7 +70,7 @@ public class PlayerChatMessage extends AbstractKookMessage {
     }
 
     private boolean isInAllowedWorld(Player player) { // 重命名以更清晰
-        List<String> blackWorlds = getPlugin().getConfig().getStringList("setting.black-worlds"); // 从主配置读取
+        List<String> blackWorlds = Config.get().getBlackWorlds();
         String worldName = player.getWorld().getName();
         return !blackWorlds.contains(worldName); // 如果黑名单包含该世界，则不允许
     }
