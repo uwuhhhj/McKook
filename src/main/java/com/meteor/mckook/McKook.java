@@ -11,9 +11,9 @@ import com.meteor.mckook.message.sub.WhitelistMessage;
 import com.meteor.mckook.storage.DataManager;
 import com.meteor.mckook.storage.mapper.LinkRepository;
 import com.meteor.mckook.util.BaseConfig;
+import com.meteor.mckook.config.Config;
 import lombok.Getter;
 import org.bukkit.command.PluginCommand;
-import org.bukkit.configuration.ConfigurationSection; // 新增导入
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -57,6 +57,7 @@ public final class McKook extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        Config.init(this);
         reloadPluginConfig(); // 这会加载 config.yml, BaseConfig, message/*.yml 和 setting.roles
 
         DataManager.init(this);
@@ -175,24 +176,13 @@ public final class McKook extends JavaPlugin {
     // 新增方法：加载角色配置
     private void loadRoleConfigurations() {
         getLogger().info("正在加载角色配置 (setting.roles)...");
-        this.configuredRoles.clear(); // 清除旧的角色配置
-        ConfigurationSection rolesSection = getConfig().getConfigurationSection("setting.roles");
-        if (rolesSection != null) {
-            for (String roleName : rolesSection.getKeys(false)) {
-                String idStr = rolesSection.getString(roleName);
-                if (idStr != null && !idStr.isEmpty()) {
-                    try {
-                        // 移除可能存在的单引号
-                        idStr = idStr.replace("'", "");
-                        this.configuredRoles.put(roleName, Integer.parseInt(idStr.trim()));
-                        getLogger().info("已加载角色: " + roleName + " -> ID: " + idStr);
-                    } catch (NumberFormatException e) {
-                        getLogger().warning("角色 '" + roleName + "' 的ID '" + idStr + "' 格式无效，已跳过。请确保为纯数字。");
-                    }
-                } else {
-                    getLogger().warning("角色 '" + roleName + "' 的ID为空，已跳过。");
-                }
-            }
+        this.configuredRoles.clear();
+        Map<String, Integer> roles = Config.get().getRoles();
+        if (!roles.isEmpty()) {
+            roles.forEach((name, id) -> {
+                this.configuredRoles.put(name, id);
+                getLogger().info("已加载角色: " + name + " -> ID: " + id);
+            });
         } else {
             getLogger().info("'setting.roles' 配置节未找到，无自定义角色信息加载。");
         }
@@ -201,7 +191,7 @@ public final class McKook extends JavaPlugin {
 
 
     public void reloadPluginConfig() {
-        super.reloadConfig();
+        Config.get().reload();
         BaseConfig.init(this);
         getLogger().info("主配置文件 (config.yml) 已重新加载。");
 

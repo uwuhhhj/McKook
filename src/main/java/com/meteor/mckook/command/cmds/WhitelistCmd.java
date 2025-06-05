@@ -2,6 +2,7 @@ package com.meteor.mckook.command.cmds;
 
 import com.meteor.mckook.McKook;
 import com.meteor.mckook.command.SubCmd;
+import com.meteor.mckook.config.Config;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
@@ -98,8 +99,8 @@ public class WhitelistCmd extends SubCmd {
         }
 
         try {
-            plugin.getConfig().set(CONFIG_PATH_ENABLE, newState);
-            plugin.saveConfig();
+            Config.get().set(CONFIG_PATH_ENABLE, newState);
+            Config.get().save();
             // 重新加载消息系统以应用更改
             // 这需要确保 McKook#reloadMessageSystem 会重新创建 WhitelistMessage 实例
             plugin.reloadMessageSystem();

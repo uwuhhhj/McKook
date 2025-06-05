@@ -3,6 +3,7 @@ package com.meteor.mckook.kook;
 
 import com.meteor.mckook.McKook;
 import com.meteor.mckook.kook.service.LinkService;
+import com.meteor.mckook.config.Config;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import snw.jkook.HttpAPI;
@@ -48,12 +49,12 @@ public class KookBot {
             kbcClient = new KBCClient(new CoreImpl(), YamlConfiguration
                     .loadConfiguration(reader),
                     new File(plugin.getDataFolder(),"plugins"),
-                    plugin.getConfig().getString("kook.bot-token")
+                    Config.get().getBotToken()
             );
             kbcClient.start();
-            this.guild = plugin.getConfig().getString("setting.guild");
+            this.guild = Config.get().getGuildId();
             channelMap = new HashMap<>();
-            ConfigurationSection channelConfig = plugin.getConfig().getConfigurationSection("setting.channel");
+            ConfigurationSection channelConfig = Config.get().getChannelSection();
             if (channelConfig != null) { // Add null check for channelConfig
                 channelConfig.getKeys(false).forEach(name -> {
                     String channelId = channelConfig.getString(name);

@@ -3,6 +3,7 @@ package com.meteor.mckook.message.sub;
 import com.meteor.mckook.McKook;
 import com.meteor.mckook.kook.service.LinkService;
 import com.meteor.mckook.message.AbstractKookMessage;
+import com.meteor.mckook.config.Config;
 import com.meteor.mckook.model.link.KookUser;
 import com.meteor.mckook.model.link.LinkCache;
 import com.meteor.mckook.util.TextComponentHelper;
@@ -33,11 +34,11 @@ public class PlayerLinkMessage extends AbstractKookMessage {
 
     public PlayerLinkMessage(McKook plugin, YamlConfiguration yamlConfiguration) {
         super(plugin, yamlConfiguration);
-        ConfigurationSection setting = plugin.getConfig().getConfigurationSection("setting");
+        ConfigurationSection setting = Config.get().getChannelSection();
         if (setting == null) {
-            throw new IllegalStateException("config.yml 中缺少 setting 节点！");
+            throw new IllegalStateException("config.yml 中缺少 setting.channel 节点！");
         }
-        this.channel = setting.getConfigurationSection("channel");
+        this.channel = setting;
         this.config = yamlConfiguration;
         this.linkService = plugin.getKookBot().getService(LinkService.class);
         this.successLinkMessage = config.getString("message.success.kook");
